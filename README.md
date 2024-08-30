@@ -427,11 +427,10 @@ for(i in 1:nsamples)
 mean(rs_est)
 sd(rs_est)
 mean(rs_std)
-cl <- data.frame(rs_lcl,rs_ucl)
-cl$flag <- rep(NA,nrow(cl))
-cl$flag[rs_lcl<=0.75 & rs_ucl>=0.75] <- 1
-cl$flag[rs_lcl>0.75 | rs_ucl<0.75] <- 0
-table(cl$flag)
+flag <- rep(NA,nsamples)
+flag[rs_lcl<=0.75 & rs_ucl>=0.75] <- 1
+flag[rs_lcl>0.75 | rs_ucl<0.75] <- 0
+table(flag)
 ```
 
 and the output is:
@@ -469,11 +468,10 @@ and the output is:
 [1] 0.01369093
 > mean(rs_std)
 [1] 0.01368431
-> cl <- data.frame(rs_lcl,rs_ucl)
-> cl$flag <- rep(NA,nrow(cl))
-> cl$flag[rs_lcl<=0.75 & rs_ucl>=0.75] <- 1
-> cl$flag[rs_lcl>0.75 | rs_ucl<0.75] <- 0
-> table(cl$flag)
+> flag <- rep(NA,nsamples)
+> flag[rs_lcl<=0.75 & rs_ucl>=0.75] <- 1
+> flag[rs_lcl>0.75 | rs_ucl<0.75] <- 0
+> table(flag)
 
      0      1 
  53333 946667
