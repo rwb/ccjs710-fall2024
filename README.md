@@ -422,8 +422,6 @@ for(i in 1:nsamples)
    rs_ucl[i] <- rs_est[i]+mult.upper*rs_std[i]
    }
 
-# look at the results
-
 mean(rs_est)
 sd(rs_est)
 mean(rs_std)
@@ -459,8 +457,6 @@ and the output is:
 +    rs_lcl[i] <- rs_est[i]+mult.lower*rs_std[i]
 +    rs_ucl[i] <- rs_est[i]+mult.upper*rs_std[i]
 +    }
-> 
-> # look at the results
 > 
 > mean(rs_est)
 [1] 0.749979
