@@ -472,3 +472,760 @@ and the output is:
      0      1 
  53333 946667
 ```
+
+### Lesson 2 - Thursday 9/5/24
+
+* Review of statistical inference (continued).
+* Key terminology: least squares, maximum likelihood, linear regression, confidence interval of expected value
+
+#### 4. Linear Regression Overview
+
+* We begin by generating a dataset with known population parameter values.
+
+```R
+# set random number seed
+
+set.seed(777)
+
+# generate a single data set
+
+nc <- 1000
+x <- rbinom(n=nc,size=1,p=0.5)
+e <- rnorm(n=nc,mean=0,sd=7)
+y <- 50+x+e
+
+# look at first few observations in the data set
+
+d <- data.frame(x,y)
+head(d,n=10)
+```
+
+* Output:
+
+```Rout
+> # set random number seed
+> 
+> set.seed(777)
+> 
+> # generate a single data set
+> 
+> nc <- 1000
+> x <- rbinom(n=nc,size=1,p=0.5)
+> e <- rnorm(n=nc,mean=0,sd=7)
+> y <- 50+x+e
+> 
+> # look at first few observations in the data set
+> 
+> d <- data.frame(x,y)
+> head(d,n=10)
+   x        y
+1  1 52.29635
+2  0 55.61395
+3  0 50.35588
+4  1 55.67656
+5  1 58.88501
+6  0 55.30937
+7  0 42.95104
+8  0 43.72929
+9  1 44.36395
+10 0 51.05988
+>
+```
+
+* Graphical overview of the data:
+
+```R
+par(mfrow=c(1,3))
+hist(y)
+hist(y[x==0])
+hist(y[x==1])
+```
+
+* which generates the following set of histograms:
+
+<p align="center">
+<img src="/gfiles/h1.png" width="600px">
+</p>
+
+* and here is a boxplot:
+
+```R
+boxplot(y~x)
+```
+
+which give us this chart:
+
+<p align="center">
+<img src="/gfiles/bp1.png" width="600px">
+</p>
+
+* Next, we estimate a linear regression model (regressing y on x). We will also extract some terms from the model object, M.
+
+```R
+# estimate linear regression model
+
+M <- lm(y~1+x)
+summary(M)
+
+# now we extract terms from this model
+# define the linear model as y=a+bx+e
+
+ahat <- coef(M)[1]
+ahat
+bhat <- coef(M)[2]
+bhat
+sigmahat <- sigma(M)
+sigmahat
+```
+
+* Output:
+
+```Rout
+> # estimate linear regression model
+> 
+> M <- lm(y~1+x)
+> summary(M)
+
+Call:
+lm(formula = y ~ 1 + x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-19.9040  -4.4970  -0.0656   4.5976  24.7341 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  50.1949     0.2964 169.348   <2e-16 ***
+x             0.9789     0.4287   2.283   0.0226 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 6.772 on 998 degrees of freedom
+Multiple R-squared:  0.005197,	Adjusted R-squared:  0.004201 
+F-statistic: 5.214 on 1 and 998 DF,  p-value: 0.02261
+
+> 
+> # now we extract terms from this model
+> # define the linear model as y=a+bx+e
+> 
+> ahat <- coef(M)[1]
+> ahat
+(Intercept) 
+   50.19493 
+> bhat <- coef(M)[2]
+> bhat
+        x 
+0.9789385 
+> sigmahat <- sigma(M)
+> sigmahat
+[1] 6.771959
+>
+```
+
+* Next, we need to collect some terms for further calculations:
+
+```R
+# calculate sample means of x and y
+
+xbar <- mean(x)
+xbar
+ybar <- mean(y)
+ybar
+
+# we can also extract the standard errors
+# of the intercept and slope terms
+
+vcov(M)
+
+se.ahat <- sqrt(vcov(M)[1,1])
+se.ahat
+
+se.bhat <- sqrt(vcov(M)[2,2])
+se.bhat
+```
+
+* Here is the output:
+
+```Rout
+> # calculate sample means of x and y
+> 
+> xbar <- mean(x)
+> xbar
+[1] 0.478
+> ybar <- mean(y)
+> ybar
+[1] 50.66286
+> 
+> # we can also extract the standard errors
+> # of the intercept and slope terms
+> 
+> vcov(M)
+            (Intercept)          x
+(Intercept)   0.0878533 -0.0878533
+x            -0.0878533  0.1837935
+> 
+> se.ahat <- sqrt(vcov(M)[1,1])
+> se.ahat
+[1] 0.2964006
+> 
+> se.bhat <- sqrt(vcov(M)[2,2])
+> se.bhat
+[1] 0.4287115
+>
+```
+
+* We can use standard textbook formulas to get the same results:
+
+```R
+# first, estimate the slope term
+
+slope.pt1 <- sum((x-xbar)*(y-ybar))
+slope.pt2 <- sum((x-xbar)^2)
+slope.est <- slope.pt1/slope.pt2
+slope.est
+
+# second, estimate the intercept term
+
+int.est <- ybar-slope.est*xbar
+int.est
+
+# third, we estimate the regression 
+# root mean square error term (sigma)
+
+n <- length(x)
+yp <- int.est+slope.est*x
+esq <- (yp-y)^2
+sigma.est <- sqrt((1/(n-2))*sum(esq))
+sigma.est
+
+# now, we calculate the standard error of the slope
+
+se.slope <- sigma.est/(sd(x)*sqrt(n))
+se.slope
+
+# and the standard error of the intercept
+
+se.int <- se.slope*sqrt(sum(x*x)/n)
+se.int
+```
+
+* Output:
+
+```Rout
+> # first, estimate the slope term
+> 
+> slope.pt1 <- sum((x-xbar)*(y-ybar))
+> slope.pt2 <- sum((x-xbar)^2)
+> slope.est <- slope.pt1/slope.pt2
+> slope.est
+[1] 0.9789385
+> 
+> # second, estimate the intercept term
+> 
+> int.est <- ybar-slope.est*xbar
+> int.est
+[1] 50.19493
+> 
+> # third, we estimate the regression 
+> # root mean square error term (sigma)
+> 
+> n <- length(x)
+> yp <- int.est+slope.est*x
+> esq <- (yp-y)^2
+> sigma.est <- sqrt((1/(n-2))*sum(esq))
+> sigma.est
+[1] 6.771959
+> 
+> # now, we calculate the standard error of the slope
+> 
+> se.slope <- sigma.est/(sd(x)*sqrt(n))
+> se.slope
+[1] 0.4284971
+> 
+> # and the standard error of the intercept
+> 
+> se.int <- se.slope*sqrt(sum(x*x)/n)
+> se.int
+[1] 0.2962523
+>
+```
+
+#### 5. Confidence Intervals for Linear Regression
+
+* First, we consider confidence intervals for the parameter estimates:
+
+```R
+# calculate critical value of t for confidence intervals
+
+tval.lookup <- qt(p=c(0.025,0.975),df=nc-2)
+tval.lookup
+tval <- tval.lookup[2]
+tval
+
+# calculate 95% confidence intervals for
+# the intercept and slope terms
+
+lcl.ahat <- ahat-tval*se.ahat
+lcl.ahat
+ucl.ahat <- ahat+tval*se.ahat
+ucl.ahat
+
+lcl.bhat <- bhat-tval*se.bhat
+lcl.bhat
+ucl.bhat <- bhat+tval*se.bhat
+ucl.bhat
+```
+
+* Output:
+
+```Rout
+> # calculate critical value of t for confidence intervals
+> 
+> tval.lookup <- qt(p=c(0.025,0.975),df=nc-2)
+> tval.lookup
+[1] -1.962344  1.962344
+> tval <- tval.lookup[2]
+> tval
+[1] 1.962344
+> 
+> # calculate 95% confidence intervals for
+> # the intercept and slope terms
+> 
+> lcl.ahat <- ahat-tval*se.ahat
+> lcl.ahat
+(Intercept) 
+   49.61329 
+> ucl.ahat <- ahat+tval*se.ahat
+> ucl.ahat
+(Intercept) 
+   50.77657 
+> 
+> lcl.bhat <- bhat-tval*se.bhat
+> lcl.bhat
+        x 
+0.1376592 
+> ucl.bhat <- bhat+tval*se.bhat
+> ucl.bhat
+       x 
+1.820218 
+>
+```
+
+* Next, we consider the confidence intervals for the expected values of y conditional on x:
+
+```R
+# 95% confidence interval for E(y|x=0) and E(y|x=1)
+# preliminary calculations
+
+# standard error of E(y|x=0)
+
+xstar <- 0
+sey.pt1 <- (xstar-xbar)^2
+sey.pt2 <- sum(x-xbar^2)
+sey.x0 <- sqrt(sigmahat^2*(1/nc+(sey.pt1/sey.pt2)))
+sey.x0
+
+# standard error of E(y|x=1)
+
+xstar <- 1
+sey.pt1 <- (xstar-xbar)^2
+sey.pt2 <- sum(x-xbar^2)
+sey.x1 <- sqrt(sigmahat^2*(1/nc+(sey.pt1/sey.pt2)))
+sey.x1
+
+# remove labels from ahat and bhat
+
+attr(ahat,"names") <- NULL
+attr(bhat,"names") <- NULL
+
+# 95% confidence limits for E(y|x=0)
+# final calculations
+
+xstar <- 0
+ahat+bhat*xstar
+lcl.eyx0 <- (ahat+bhat*xstar)-tval*sey.x0
+lcl.eyx0
+ucl.eyx0 <- (ahat+bhat*xstar)+tval*sey.x0
+ucl.eyx0
+
+xstar <- 1
+ahat+bhat*xstar
+lcl.eyx1 <- (ahat+bhat*xstar)-tval*sey.x1
+lcl.eyx1
+ucl.eyx1 <- (ahat+bhat*xstar)+tval*sey.x1
+ucl.eyx1
+```
+
+* Output:
+  
+```Rout
+> # 95% confidence interval for E(y|x=0) and E(y|x=1)
+> # preliminary calculations
+> 
+> # standard error of E(y|x=0)
+> 
+> xstar <- 0
+> sey.pt1 <- (xstar-xbar)^2
+> sey.pt2 <- sum(x-xbar^2)
+> sey.x0 <- sqrt(sigmahat^2*(1/nc+(sey.pt1/sey.pt2)))
+> sey.x0
+[1] 0.2964006
+> 
+> # standard error of E(y|x=1)
+> 
+> xstar <- 1
+> sey.pt1 <- (xstar-xbar)^2
+> sey.pt2 <- sum(x-xbar^2)
+> sey.x1 <- sqrt(sigmahat^2*(1/nc+(sey.pt1/sey.pt2)))
+> sey.x1
+[1] 0.3097422
+> 
+> # remove labels from ahat and bhat
+> 
+> attr(ahat,"names") <- NULL
+> attr(bhat,"names") <- NULL
+> 
+> # 95% confidence limits for E(y|x=0)
+> # final calculations
+> 
+> xstar <- 0
+> ahat+bhat*xstar
+[1] 50.19493
+> lcl.eyx0 <- (ahat+bhat*xstar)-tval*sey.x0
+> lcl.eyx0
+[1] 49.61329
+> ucl.eyx0 <- (ahat+bhat*xstar)+tval*sey.x0
+> ucl.eyx0
+[1] 50.77657
+> 
+> xstar <- 1
+> ahat+bhat*xstar
+[1] 51.17387
+> lcl.eyx1 <- (ahat+bhat*xstar)-tval*sey.x1
+> lcl.eyx1
+[1] 50.56605
+> ucl.eyx1 <- (ahat+bhat*xstar)+tval*sey.x1
+> ucl.eyx1
+[1] 51.78169
+> 
+```
+
+* R gives us a way to verify our calculations:
+
+```R
+# check our work
+
+predict(M,newdata=data.frame(x=c(0,1)),
+  level=0.95,interval="confidence")
+```
+
+* Output:
+
+```Rout
+> # check our work
+> 
+> predict(M,newdata=data.frame(x=c(0,1)),
++   level=0.95,interval="confidence")
+       fit      lwr      upr
+1 50.19493 49.61329 50.77657
+2 51.17387 50.56605 51.78169
+>
+```
+
+#### 6. Repeated Sampling
+
+* We now study the behavior of the linear regression estimator when we draw thousands of samples from the population with known parameter values.
+  
+```R
+# repeated sampling process
+
+a.rs <- vector()
+b.rs <- vector()
+ase.rs <- vector()
+bse.rs <- vector()
+lcl95x0.rs <- vector()
+ucl95x0.rs <- vector()
+lcl95x1.rs <- vector()
+ucl95x1.rs <- vector()
+
+for(i in 1:10000){
+  e <- rnorm(n=nc,mean=0,sd=3)
+  y.rs <- 50+x+e
+  m.rs <- lm(y.rs~1+x)
+  a.rs[i] <- coef(m.rs)[1]
+  b.rs[i] <- coef(m.rs)[2]
+  ase.rs[i] <- sqrt(vcov(m.rs)[1,1])
+  bse.rs[i] <- sqrt(vcov(m.rs)[2,2])
+  confint <- predict(m.rs,
+    newdata=data.frame(x=c(0,1)),
+    level=0.95,interval="confidence")
+  lcl95x0.rs[i] <- confint[1,2]
+  ucl95x0.rs[i] <- confint[1,3]
+  lcl95x1.rs[i] <- confint[2,2]
+  ucl95x1.rs[i] <- confint[2,3]
+  }      
+
+# sampling distribution of parameter estimates
+# first look at the histograms
+
+par(mfrow=c(1,2))
+hist(a.rs)
+hist(b.rs)
+
+# let's review some descriptive statistics
+
+mean(a.rs)
+median(a.rs)
+sd(a.rs)
+mean(ase.rs)
+
+mean(b.rs)
+median(b.rs)
+sd(b.rs)
+mean(bse.rs)
+```
+
+* Output:
+
+```Rout
+> # repeated sampling process
+> 
+> a.rs <- vector()
+> b.rs <- vector()
+> ase.rs <- vector()
+> bse.rs <- vector()
+> lcl95x0.rs <- vector()
+> ucl95x0.rs <- vector()
+> lcl95x1.rs <- vector()
+> ucl95x1.rs <- vector()
+> 
+> for(i in 1:10000){
++   e <- rnorm(n=nc,mean=0,sd=3)
++   y.rs <- 50+x+e
++   m.rs <- lm(y.rs~1+x)
++   a.rs[i] <- coef(m.rs)[1]
++   b.rs[i] <- coef(m.rs)[2]
++   ase.rs[i] <- sqrt(vcov(m.rs)[1,1])
++   bse.rs[i] <- sqrt(vcov(m.rs)[2,2])
++   confint <- predict(m.rs,
++     newdata=data.frame(x=c(0,1)),
++     level=0.95,interval="confidence")
++   lcl95x0.rs[i] <- confint[1,2]
++   ucl95x0.rs[i] <- confint[1,3]
++   lcl95x1.rs[i] <- confint[2,2]
++   ucl95x1.rs[i] <- confint[2,3]
++   }      
+> 
+> # sampling distribution of parameter estimates
+> # first look at the histograms
+> 
+> par(mfrow=c(1,2))
+> hist(a.rs)
+> hist(b.rs)
+> 
+> # let's review some descriptive statistics
+> 
+> mean(a.rs)
+[1] 50.00102
+> median(a.rs)
+[1] 50.00079
+> sd(a.rs)
+[1] 0.1313598
+> mean(ase.rs)
+[1] 0.1313106
+> 
+> mean(b.rs)
+[1] 1.00045
+> median(b.rs)
+[1] 0.99814
+> sd(b.rs)
+[1] 0.1899989
+> mean(bse.rs)
+[1] 0.1899266
+>
+```
+
+<p align="center">
+<img src="/gfiles/h2.png" width="600px">
+</p>
+
+* Now, we examine the coverage of our 95% confidence interval estimators:
+
+```R
+# calculate 95% confidence intervals for 
+# the slope and intercept terms in each sample
+
+lcla.rs <- a.rs-tval*ase.rs
+ucla.rs <- a.rs+tval*ase.rs
+ahit <- ifelse(lcla.rs<50 & ucla.rs>50,1,0)
+mean(ahit)
+
+lclb.rs <- b.rs-tval*bse.rs
+uclb.rs <- b.rs+tval*bse.rs
+bhit <- ifelse(lclb.rs<1 & uclb.rs>1,1,0)
+mean(bhit)
+
+# now check 95% confidence interval 
+# coverage for E(y|x=0) and E(y|x=1)
+
+eyx0hit <- ifelse(lcl95x0.rs<50 & ucl95x0.rs>50,1,0)
+mean(eyx0hit)
+
+eyx1hit <- ifelse(lcl95x1.rs<51 & ucl95x1.rs>51,1,0)
+mean(eyx1hit)
+```
+
+* Output:
+
+```Rout
+> # calculate 95% confidence intervals for 
+> # the slope and intercept terms in each sample
+> 
+> lcla.rs <- a.rs-tval*ase.rs
+> ucla.rs <- a.rs+tval*ase.rs
+> ahit <- ifelse(lcla.rs<50 & ucla.rs>50,1,0)
+> mean(ahit)
+[1] 0.9499
+> 
+> lclb.rs <- b.rs-tval*bse.rs
+> uclb.rs <- b.rs+tval*bse.rs
+> bhit <- ifelse(lclb.rs<1 & uclb.rs>1,1,0)
+> mean(bhit)
+[1] 0.9515
+> 
+> # now check 95% confidence interval 
+> # coverage for E(y|x=0) and E(y|x=1)
+> 
+> eyx0hit <- ifelse(lcl95x0.rs<50 & ucl95x0.rs>50,1,0)
+> mean(eyx0hit)
+[1] 0.9499
+> 
+> eyx1hit <- ifelse(lcl95x1.rs<51 & ucl95x1.rs>51,1,0)
+> mean(eyx1hit)
+[1] 0.9498
+>
+```
+
+#### 7. Introduction to Maximum Likelihood Estimation
+
+* Likelihood corresponds to the probability of the data looking the way they do, conditional on a particular set of parameter values - p(d|m) where d is the data and m is the model.
+* Recall our original model, M:
+
+```R
+summary(M)
+logLik(M)
+```
+
+* Here is the regression output:
+
+```Rout
+> summary(M)
+
+Call:
+lm(formula = y ~ 1 + x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-19.9040  -4.4970  -0.0656   4.5976  24.7341 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  50.1949     0.2964 169.348   <2e-16 ***
+x             0.9789     0.4287   2.283   0.0226 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 6.772 on 998 degrees of freedom
+Multiple R-squared:  0.005197,	Adjusted R-squared:  0.004201 
+F-statistic: 5.214 on 1 and 998 DF,  p-value: 0.02261
+
+> logLik(M)
+'log Lik.' -3330.728 (df=3)
+>
+```
+
+* Next, we illustrate a grid-search maximum likelihood method to illustrate the key ideas:
+
+```R
+intvalues <- seq(from=1,to=100,by=1)
+slopevalues <- seq(from=-1,to=1,by=0.1)
+sigvalues <- seq(from=1,to=10,by=0.5)
+
+m <- expand.grid(intvalues,slopevalues,sigvalues)
+names(m) <- c("intvalues","slopevalues","sigvalues")
+dim(m)
+head(m,n=10)
+
+log.likelihood <- vector()
+
+for(i in 1:nrow(m)){
+  mu <- m$intvalues[i]+m$slopevalues[i]*x
+  sig <- m$sigvalues[i]
+  pt1 <- 1/sqrt(2*pi*sig^2)
+  pt2 <- -1*(y-mu)^2
+  pt3 <- 2*sig^2
+  lpdf <- log(pt1*exp(pt2/pt3))
+  log.likelihood[i] <- sum(lpdf)
+  }
+
+ml <- cbind(m,log.likelihood)
+subset(ml,log.likelihood==max(log.likelihood))
+sorted.ml <- ml[order(log.likelihood,decreasing=T),] 
+head(sorted.ml,n=10)
+```
+
+* Output:
+
+```Rout
+> intvalues <- seq(from=1,to=100,by=1)
+> slopevalues <- seq(from=-1,to=1,by=0.1)
+> sigvalues <- seq(from=1,to=10,by=0.5)
+> 
+> m <- expand.grid(intvalues,slopevalues,sigvalues)
+> names(m) <- c("intvalues","slopevalues","sigvalues")
+> dim(m)
+[1] 39900     3
+> head(m,n=10)
+   intvalues slopevalues sigvalues
+1          1          -1         1
+2          2          -1         1
+3          3          -1         1
+4          4          -1         1
+5          5          -1         1
+6          6          -1         1
+7          7          -1         1
+8          8          -1         1
+9          9          -1         1
+10        10          -1         1
+> 
+> log.likelihood <- vector()
+> 
+> for(i in 1:nrow(m)){
++   mu <- m$intvalues[i]+m$slopevalues[i]*x
++   sig <- m$sigvalues[i]
++   pt1 <- 1/sqrt(2*pi*sig^2)
++   pt2 <- -1*(y-mu)^2
++   pt3 <- 2*sig^2
++   lpdf <- log(pt1*exp(pt2/pt3))
++   log.likelihood[i] <- sum(lpdf)
++   }
+> 
+> ml <- cbind(m,log.likelihood)
+> subset(ml,log.likelihood==max(log.likelihood))
+      intvalues slopevalues sigvalues log.likelihood
+27250        50           1         7      -3332.216
+> sorted.ml <- ml[order(log.likelihood,decreasing=T),] 
+> head(sorted.ml,n=10)
+      intvalues slopevalues sigvalues log.likelihood
+27250        50         1.0       7.0      -3332.216
+27150        50         0.9       7.0      -3332.434
+27050        50         0.8       7.0      -3332.750
+25150        50         1.0       6.5      -3332.776
+25050        50         0.9       6.5      -3333.029
+26950        50         0.7       7.0      -3333.164
+24950        50         0.8       6.5      -3333.396
+26850        50         0.6       7.0      -3333.675
+24850        50         0.7       6.5      -3333.875
+26750        50         0.5       7.0      -3334.283
+>
+```
