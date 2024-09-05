@@ -949,7 +949,7 @@ lcl95x1.rs <- vector()
 ucl95x1.rs <- vector()
 
 for(i in 1:10000){
-  e <- rnorm(n=nc,mean=0,sd=3)
+  e <- rnorm(n=nc,mean=0,sd=7)
   y.rs <- 50+x+e
   m.rs <- lm(y.rs~1+x)
   a.rs[i] <- coef(m.rs)[1]
@@ -1000,7 +1000,7 @@ mean(bse.rs)
 > ucl95x1.rs <- vector()
 > 
 > for(i in 1:10000){
-+   e <- rnorm(n=nc,mean=0,sd=3)
++   e <- rnorm(n=nc,mean=0,sd=7)
 +   y.rs <- 50+x+e
 +   m.rs <- lm(y.rs~1+x)
 +   a.rs[i] <- coef(m.rs)[1]
@@ -1026,23 +1026,23 @@ mean(bse.rs)
 > # let's review some descriptive statistics
 > 
 > mean(a.rs)
-[1] 50.00102
+[1] 50.00238
 > median(a.rs)
-[1] 50.00079
+[1] 50.00184
 > sd(a.rs)
-[1] 0.1313598
+[1] 0.3065062
 > mean(ase.rs)
-[1] 0.1313106
+[1] 0.3063913
 > 
 > mean(b.rs)
-[1] 1.00045
+[1] 1.00105
 > median(b.rs)
-[1] 0.99814
+[1] 0.9956601
 > sd(b.rs)
-[1] 0.1899989
+[1] 0.4433307
 > mean(bse.rs)
-[1] 0.1899266
->
+[1] 0.443162
+> 
 ```
 
 <p align="center">
@@ -1103,7 +1103,7 @@ mean(eyx1hit)
 > eyx1hit <- ifelse(lcl95x1.rs<51 & ucl95x1.rs>51,1,0)
 > mean(eyx1hit)
 [1] 0.9498
->
+> 
 ```
 
 #### 7. Introduction to Maximum Likelihood Estimation
