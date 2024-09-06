@@ -1229,7 +1229,9 @@ head(sorted.ml,n=10)
 
 #### Assignment #1: Due End of Day on Friday 9/13/24
 
-1. You already know that the sampling distribution of a sample mean gets smaller when the sample size increases. Design a simulation where you demonstrate what happens to the sampling distribution of the sample median when the sample size increases. Note: please use your UMD student id number to seed your simulation study.
+*Instructions*: Please complete each of the tasks outlined below. When you are finished, please email a readable pdf copy of your work where your responses to each of the tasks and questions are clearly indicated. You are also welcome to submit a paper copy if you prefer (but any submissions arriving after 5pm on Friday 9/13 should be sent via email so there is a time record of the submission). Also, if you choose to submit a paper copy and I am not in the office when you submit, you should put your paper copy in an interoffice mail envelope and slide it under my office door. Please show all calculations in an organized and easy to read format. This is to help me grade your work but it is also so you can go back to your notes at a later date and be able to understand what you did and why you did it. A couple of points to keep in mind about late submissions: (1) if your assignment is submitted late (after 11:59pm on Friday 9/13/24), there will be an automatic 10 point deduction for a late submission; (2) if your assignment is submitted more than 24 hours late, there will be an automatic 20 point deduction; (3) if your assignment is submitted more than 48 hours late, the maximum available score on the assignment will be a 50. Please double check that I can read your pdf file before you submit it. If the file is corrupt or has a virus or I am unable to read it, it will be treated the same as a late submission. Once I receive your submission (which may not be immediately after you send it), I will write to you and confirm that I have received it and can open your file. The work you submit for this project must be your own work. I will also confirm receipt of paper submissions. If you choose to ask me a clarifying question, I will determine whether I think it is proper to answer the question. If I decide to answer the question, I will post both the question and my response below the assignment for all students to see. I will not be able to answer any clarifying questions after class on Thursday 9/12. I suggest you not submit your assignment until after that time. The point values for each task are listed next to the task. 
+
+1. You already know that the sampling distribution of a sample mean gets smaller when the sample size increases. Design a simulation where you demonstrate what happens to the sampling distribution of the sample median when the sample size increases. Note: please use your UMD student id number to seed your simulation study. (20pts).
 
 2. Consider the following dataset:
 
@@ -1241,9 +1243,9 @@ y <- 1/3*x+e
 d <- data.frame(x,y)
 ```
 
-* Estimate a regression where *x* is the independent variable and *y* is the dependent variable.
-* Use the variance-covariance matrix of the parameter estimates to calculate the standard error of the intercept and the slope coefficient.
-* Estimate a 80% confidence interval for the slope coefficient.
-* Use the arithmetic formula to estimate a 90% confidence interval for the expected value of *y* when x is equal to 10; confirm your answer with the predict() function.
+* Estimate a regression where *x* is the independent variable and *y* is the dependent variable (10pts).
+* Use the variance-covariance matrix of the parameter estimates to calculate the standard error of the intercept and the slope coefficient (10pts).
+* Estimate a 80% confidence interval for the slope coefficient (15pts).
+* Use the arithmetic formula to estimate a 90% confidence interval for the expected value of *y* when x is equal to 10; confirm your answer with the predict() function (15pts).
 
-3. Suppose we have a state population of 7822 people released on bail. The population failure to appear (FTA) rate is 27% (which would ordinarily not be known to us). Suppose we are able to draw a single random sample of size N = 87 from this population and that 33 of the 87 people in our sample failed to appear. Estimate a 90% confidence interval for the FTA rate in the single sample. Comment on whether the 90% confidence interval in your sample includes the true population parameter value. 
+3. Suppose we have a state population of 7822 people released on bail. The population failure to appear (FTA) rate is 27% (which would ordinarily not be known to us). Suppose we are able to draw a single random sample of size N = 87 from this population and that 33 of the 87 people in our sample failed to appear. Estimate a 90% confidence interval for the FTA rate in the single sample (20pts). Comment on whether the 90% confidence interval in your sample includes the true population parameter value (10pts). 
