@@ -407,19 +407,16 @@ rs_std <- vector()
 rs_lcl <- vector()
 rs_ucl <- vector()
 
-mult.lower <- qnorm(p=0.025)
-mult.lower
-
-mult.upper <- qnorm(p=0.975)
-mult.upper
+mult <- qnorm(p=0.975)
+mult
 
 for(i in 1:nsamples)
   {
    rs <- sample(r,size=sampsize,replace=T)
    rs_est[i] <- mean(rs)
    rs_std[i] <- sqrt(mean(rs)*(1-mean(rs))/sampsize)
-   rs_lcl[i] <- rs_est[i]+mult.lower*rs_std[i]
-   rs_ucl[i] <- rs_est[i]+mult.upper*rs_std[i]
+   rs_lcl[i] <- rs_est[i]-mult*rs_std[i]
+   rs_ucl[i] <- rs_est[i]+mult*rs_std[i]
    }
 
 mean(rs_est)
@@ -1229,3 +1226,24 @@ head(sorted.ml,n=10)
 26750        50         0.5       7.0      -3334.283
 >
 ```
+
+#### Assignment #1: Due End of Day on Friday 9/13/24
+
+1. You already know that the sampling distribution of a sample mean gets smaller when the sample size increases. Design a simulation where you demonstrate what happens to the sampling distribution of the sample median when the sample size increases. Note: please use your UMD student id number to seed your simulation study.
+
+2. Consider the following dataset:
+
+```R
+set.seed(your student id)
+x <- rnorm(n=300,mean=10,sd=1)
+e <- rnorm(n=300,mean=0,sd=8)
+y <- 1/3*x+e
+d <- data.frame(x,y)
+```
+
+* Estimate a regression where *x* is the independent variable and *y* is the dependent variable.
+* Use the variance-covariance matrix of the parameter estimates to calculate the standard error of the intercept and the slope coefficient.
+* Estimate a 80% confidence interval for the slope coefficient.
+* Use the arithmetic formula to estimate a 90% confidence interval for the expected value of *y* when x is equal to 10; confirm your answer with the predict() function.
+
+3. Suppose we have a state population of 7822 people released on bail. The population failure to appear (FTA) rate is 27% (which would ordinarily not be known to us). Suppose we are able to draw a single random sample of size N = 87 from this population and that 33 of the 87 people in our sample failed to appear. Estimate a 90% confidence interval for the FTA rate in the single sample. Comment on whether the 90% confidence interval in your sample includes the true population parameter value. 
