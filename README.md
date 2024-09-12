@@ -1385,23 +1385,23 @@ head(sorted.ml,n=10)
 * The observed data come from Bushway, Phillips, and Cook (2012:442; [link](https://www.degruyter.com/document/doi/10.1111/j.1468-0475.2012.00578.x/html)).
 
 ```R
-yss <- c(rep(0,3),rep(1,10))
-yss
-table(yss)
-mean(yss)
+y <- c(rep(0,3),rep(1,10))
+y
+table(y)
+mean(y)
 ```
 
 * Here is our output:
 
 ```Rout
-> yss <- c(rep(0,3),rep(1,10))
-> yss
+> y <- c(rep(0,3),rep(1,10))
+> y
  [1] 0 0 0 1 1 1 1 1 1 1 1 1 1
-> table(yss)
-yss
+> table(y)
+y
  0  1 
  3 10 
-> mean(yss)
+> mean(y)
 [1] 0.7692308
 >
 ```
@@ -1424,6 +1424,11 @@ data.frame(p,likelihood)
 * which gives us the following (long) output:
 
 ```Rout
+> N <- 13
+> r <- 10
+> r/N
+[1] 0.7692308
+> 
 > p <- seq(from=0,to=1,by=0.01)
 > likelihood <- choose(N,r)*p^r*(1-p)^(N-r)
 > options(scipen=100)
@@ -1543,4 +1548,89 @@ which gives us the following chart:
 
 <p align="center">
 <img src="/gfiles/like-plot.png" width="500px">
+</p>
+
+* Note that we could get a more detailed set of results by estimating a logistic regression model with only an intercept term.
+
+```R
+M <- glm(y~1,family="binomial")
+summary(M)
+```
+
+* Here is the model output:
+
+```Rout
+> M <- glm(y~1,family="binomial")
+> summary(M)
+
+Call:
+glm(formula = y ~ 1, family = "binomial")
+
+Coefficients:
+            Estimate Std. Error z value Pr(>|z|)  
+(Intercept)   1.2040     0.6583   1.829   0.0674 .
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 14.045  on 12  degrees of freedom
+Residual deviance: 14.045  on 12  degrees of freedom
+AIC: 16.045
+
+Number of Fisher Scoring iterations: 4
+
+>
+```
+
+* How do we interpret this estimate?
+
+```R
+intest <- coef(M)[1]
+intest
+phat <- exp(intest)/(1+exp(intest))
+attr(phat,"names") <- NULL
+phat
+```
+
+* Here is our output:
+
+```Rout
+> intest <- coef(M)[1]
+> intest
+(Intercept) 
+   1.203973 
+> phat <- exp(intest)/(1+exp(intest))
+> attr(phat,"names") <- NULL
+> phat
+[1] 0.7692308
+>
+```
+
+* Notice that there is a test of the hypothesis that the intercept is equal to zero.
+* What would an intercept of 0 imply about the probability distribution of the outcome?
+
+```R
+exp(0)/(1+exp(0))
+```
+
+* So, as we can see below, an intercept of 0 with no covariates implies that the outcome is equally distributed between the 0's and 1's:
+
+```Rout
+> exp(0)/(1+exp(0))
+[1] 0.5
+>
+```
+
+* So, if we were using a 95% confidence level for our hypothesis test, we would fail to reject the hypothesis that the intercept is equal to zero (or, equivalently that p is equal to 0.5).
+* Note the relationship between "logistic metric" and "probability metric":
+
+```R
+logit <- seq(from=-3,to=3,by=0.1)
+py <- exp(logit)/(1+exp(logit))
+plot(x=logit,y=py,type="l",lty=1,lwd=2)
+```
+
+<p align="center">
+<img src="/gfiles/logit-plot.png" width="500px">
 </p>
