@@ -1406,7 +1406,7 @@ y
 >
 ```
 
-* This raises the question of what is the maximum likelihood estimate of *p*?; where *p* is estimated by the number of times an event occurred (*r*) divided by the number of times an event could have occurred (*N*). In this case, that estimate would be 10/13.
+* What is the maximum likelihood estimate of *p*?; where *p* is estimated by the number of times an event occurred (*r*) divided by the number of times an event could have occurred (*N*). In this case, that estimate would be 10/13.
 * To find an approximate maximum likelihood estimate of *p* we could use a grid search method like the one we used in #7 above.
 * This will require that we code the binomial probability mass function:
 
@@ -1634,3 +1634,138 @@ plot(x=logit,y=py,type="l",lty=1,lwd=2)
 <p align="center">
 <img src="/gfiles/logit-plot.png" width="500px">
 </p>
+
+* This raises questions about inference for proportions.
+
+#### 9. Inference about Proportions
+
+* A simple approach for calculating a 95% confidence interval for *p* would be to use the information in the logistic regression model:
+
+```R
+logit.lcl <- 1.204-1.96*0.6583
+logit.ucl <- 1.204+1.96*0.6583
+exp(logit.lcl)/(1+exp(logit.lcl))
+exp(logit.ucl)/(1+exp(logit.ucl))
+```
+
+which yields the following output:
+
+```Rout
+> logit.lcl <- 1.204-1.96*0.6583
+> logit.ucl <- 1.204+1.96*0.6583
+> exp(logit.lcl)/(1+exp(logit.lcl))
+[1] 0.4784464
+> exp(logit.ucl)/(1+exp(logit.ucl))
+[1] 0.923739
+>
+```
+
+* Another approach is to use the so-called "exact method" based Clopper/Pearson's work:
+
+```
+lcl <- qbeta(0.025,10,13-10+1)
+lcl
+ucl <- qbeta(0.975,10+1,13-10)
+ucl
+```
+
+* which gives us this output:
+
+```Rout
+> lcl <- qbeta(0.025,10,13-10+1)
+> lcl
+[1] 0.4618685
+> ucl <- qbeta(0.975,10+1,13-10)
+> ucl
+[1] 0.9496189
+>
+```
+
+* Still another approach is to use the normal approximation to the binomial:
+
+```R
+phat <- 10/13
+phat
+se.phat <- sqrt(phat*(1-phat)/13)
+se.phat
+lcl <- phat-1.96*se.phat
+lcl
+ucl <- phat+1.96*se.phat
+ucl
+```
+
+* Here is our output:
+
+```Rout
+> phat <- 10/13
+> phat
+[1] 0.7692308
+> se.phat <- sqrt(phat*(1-phat)/13)
+> se.phat
+[1] 0.1168545
+> lcl <- phat-1.96*se.phat
+> lcl
+[1] 0.5401959
+> ucl <- phat+1.96*se.phat
+> ucl
+[1] 0.9982657
+>
+```
+
+* Still another approach is to use the bootstrap:
+
+```
+y <- c(rep(0,3),rep(1,10))
+pb <- vector()
+for(i in 1:1000){
+  b <- sample(1:13,size=13,replace=T)
+  yb <- y[b]
+  pb[i] <- mean(yb)
+  }
+
+quantile(pb,0.025)
+quantile(pb,0.975)
+```
+
+* Here is the output:
+
+```Rout
+> y <- c(rep(0,3),rep(1,10))
+> pb <- vector()
+> for(i in 1:1000){
++   b <- sample(1:13,size=13,replace=T)
++   yb <- y[b]
++   pb[i] <- mean(yb)
++   }
+> 
+> quantile(pb,0.025)
+     2.5% 
+0.5384615 
+> quantile(pb,0.975)
+97.5% 
+    1 
+>
+```
+
+* And, we can use a beta binomial model with a uniform prior:
+
+```R
+y <- c(rep(0,3),rep(1,10))
+pvec <- rbeta(n=1000,1+sum(y),1+13-sum(y))
+quantile(pvec,0.025)
+quantile(pvec,0.975)
+```
+
+* Here is the output:
+
+```Rout
+> y <- c(rep(0,3),rep(1,10))
+> pvec <- rbeta(n=1000,1+sum(y),1+13-sum(y))
+> quantile(pvec,0.025)
+     2.5% 
+0.5276985 
+> quantile(pvec,0.975)
+    97.5% 
+0.9138986 
+>
+```
