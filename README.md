@@ -1249,3 +1249,298 @@ d <- data.frame(x,y)
 * Use the arithmetic formula to estimate a 90% confidence interval for the expected value of *y* when x is equal to 10; confirm your answer with the predict() function (15pts).
 
 3. Suppose we have a state population of 7822 people released on bail. The population failure to appear (FTA) rate is 27% (which would ordinarily not be known to us). Suppose we are able to draw a single random sample of size N = 87 from this population and that 33 of the 87 people in our sample failed to appear. Estimate a 90% confidence interval for the FTA rate in the single sample (20pts). Comment on whether the 90% confidence interval in the sample includes the true population parameter value (10pts). 
+
+### Lesson 3 - Thursday 9/12/24
+
+* Introduction to maximum likelihood (linear regression)
+* Introduction to maximum likelihood (proportion)
+* Inferential issues with proportions
+  
+#### 7. Introduction to Maximum Likelihood Estimation
+
+* Likelihood corresponds to the probability of the data looking the way they do, conditional on a particular set of parameter values - p(d|m) where d is the data and m is the model.
+* Recall our original model, M:
+
+```R
+summary(M)
+logLik(M)
+```
+
+* Here is the regression output:
+
+```Rout
+> summary(M)
+
+Call:
+lm(formula = y ~ 1 + x)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-19.9040  -4.4970  -0.0656   4.5976  24.7341 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  50.1949     0.2964 169.348   <2e-16 ***
+x             0.9789     0.4287   2.283   0.0226 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 6.772 on 998 degrees of freedom
+Multiple R-squared:  0.005197,	Adjusted R-squared:  0.004201 
+F-statistic: 5.214 on 1 and 998 DF,  p-value: 0.02261
+
+> logLik(M)
+'log Lik.' -3330.728 (df=3)
+>
+```
+
+* Next, we illustrate a grid-search maximum likelihood method to illustrate the key ideas:
+
+```R
+intvalues <- seq(from=1,to=100,by=1)
+slopevalues <- seq(from=-1,to=1,by=0.1)
+sigvalues <- seq(from=1,to=10,by=0.5)
+
+m <- expand.grid(intvalues,slopevalues,sigvalues)
+names(m) <- c("intvalues","slopevalues","sigvalues")
+dim(m)
+head(m,n=10)
+
+log.likelihood <- vector()
+
+for(i in 1:nrow(m)){
+  mu <- m$intvalues[i]+m$slopevalues[i]*x
+  sig <- m$sigvalues[i]
+  pt1 <- 1/sqrt(2*pi*sig^2)
+  pt2 <- -1*(y-mu)^2
+  pt3 <- 2*sig^2
+  lpdf <- log(pt1*exp(pt2/pt3))
+  log.likelihood[i] <- sum(lpdf)
+  }
+
+ml <- cbind(m,log.likelihood)
+subset(ml,log.likelihood==max(log.likelihood))
+sorted.ml <- ml[order(log.likelihood,decreasing=T),] 
+head(sorted.ml,n=10)
+```
+
+* Output:
+
+```Rout
+> intvalues <- seq(from=1,to=100,by=1)
+> slopevalues <- seq(from=-1,to=1,by=0.1)
+> sigvalues <- seq(from=1,to=10,by=0.5)
+> 
+> m <- expand.grid(intvalues,slopevalues,sigvalues)
+> names(m) <- c("intvalues","slopevalues","sigvalues")
+> dim(m)
+[1] 39900     3
+> head(m,n=10)
+   intvalues slopevalues sigvalues
+1          1          -1         1
+2          2          -1         1
+3          3          -1         1
+4          4          -1         1
+5          5          -1         1
+6          6          -1         1
+7          7          -1         1
+8          8          -1         1
+9          9          -1         1
+10        10          -1         1
+> 
+> log.likelihood <- vector()
+> 
+> for(i in 1:nrow(m)){
++   mu <- m$intvalues[i]+m$slopevalues[i]*x
++   sig <- m$sigvalues[i]
++   pt1 <- 1/sqrt(2*pi*sig^2)
++   pt2 <- -1*(y-mu)^2
++   pt3 <- 2*sig^2
++   lpdf <- log(pt1*exp(pt2/pt3))
++   log.likelihood[i] <- sum(lpdf)
++   }
+> 
+> ml <- cbind(m,log.likelihood)
+> subset(ml,log.likelihood==max(log.likelihood))
+      intvalues slopevalues sigvalues log.likelihood
+27250        50           1         7      -3332.216
+> sorted.ml <- ml[order(log.likelihood,decreasing=T),] 
+> head(sorted.ml,n=10)
+      intvalues slopevalues sigvalues log.likelihood
+27250        50         1.0       7.0      -3332.216
+27150        50         0.9       7.0      -3332.434
+27050        50         0.8       7.0      -3332.750
+25150        50         1.0       6.5      -3332.776
+25050        50         0.9       6.5      -3333.029
+26950        50         0.7       7.0      -3333.164
+24950        50         0.8       6.5      -3333.396
+26850        50         0.6       7.0      -3333.675
+24850        50         0.7       6.5      -3333.875
+26750        50         0.5       7.0      -3334.283
+>
+```
+
+#### 8. Maximum Likelihood Estimation for a Proportion
+
+* The observed data come from Bushway, Phillips, and Cook (2012:442; [link](https://www.degruyter.com/document/doi/10.1111/j.1468-0475.2012.00578.x/html)).
+
+```R
+yss <- c(rep(0,3),rep(1,10))
+yss
+table(yss)
+mean(yss)
+```
+
+* Here is our output:
+
+```Rout
+> yss <- c(rep(0,3),rep(1,10))
+> yss
+ [1] 0 0 0 1 1 1 1 1 1 1 1 1 1
+> table(yss)
+yss
+ 0  1 
+ 3 10 
+> mean(yss)
+[1] 0.7692308
+>
+```
+
+* This raises the question of what is the maximum likelihood estimate of *p*?; where *p* is estimated by the number of times an event occurred (*r*) divided by the number of times an event could have occurred (*N*). In this case, that estimate would be 10/13.
+* To find an approximate maximum likelihood estimate of *p* we could use a grid search method like the one we used in #7 above.
+* This will require that we code the binomial probability mass function:
+
+```R
+N <- 13
+r <- 10
+r/N
+
+p <- seq(from=0,to=1,by=0.01)
+likelihood <- choose(N,r)*p^r*(1-p)^(N-r)
+options(scipen=100)
+data.frame(p,likelihood)
+```
+
+* which gives us the following (long) output:
+
+```Rout
+> p <- seq(from=0,to=1,by=0.01)
+> likelihood <- choose(N,r)*p^r*(1-p)^(N-r)
+> options(scipen=100)
+> data.frame(p,likelihood)
+       p                 likelihood
+1   0.00 0.000000000000000000000000
+2   0.01 0.000000000000000002775055
+3   0.02 0.000000000000002756412539
+4   0.03 0.000000000000154132344014
+5   0.04 0.000000000002653258996777
+6   0.05 0.000000000023946215820313
+7   0.06 0.000000000143635601614602
+8   0.07 0.000000000649823299439294
+9   0.08 0.000000002391274238058169
+10  0.09 0.000000007514763278439475
+11  0.10 0.000000020849400000000012
+12  0.11 0.000000052295329610931190
+13  0.12 0.000000120677557092829039
+14  0.13 0.000000259631459110000306
+15  0.14 0.000000526188974240686383
+16  0.15 0.000001012827304467772898
+17  0.16 0.000001863818927911930489
+18  0.17 0.000003296776638458255086
+19  0.18 0.000005630314329094372920
+20  0.19 0.000009318737951700382271
+21  0.20 0.000014994636800000011917
+22  0.21 0.000023520159055568149836
+23  0.22 0.000036047624414275319677
+24  0.23 0.000054089948609556367566
+25  0.24 0.000079601128929198696448
+26  0.25 0.000115066766738891601562
+27  0.26 0.000163604284183464820154
+28  0.27 0.000229072130527423374613
+29  0.28 0.000316186873218026408792
+30  0.29 0.000430646635212245131909
+31  0.30 0.000579258880199999613529
+32  0.31 0.000770070069133438860065
+33  0.32 0.001012494224193852352528
+34  0.33 0.001317436950386961574608
+35  0.34 0.001697410991794145399686
+36  0.35 0.002166638951503394548703
+37  0.36 0.002741138394599944034385
+38  0.37 0.003438784196190102643298
+39  0.38 0.004279342705658985453188
+40  0.39 0.005284472088961424292297
+41  0.40 0.006477683097600002437577
+42  0.41 0.007884254510875005755866
+43  0.42 0.009531097621522058305210
+44  0.43 0.011446564397965984169470
+45  0.44 0.013660194372285170208436
+46  0.45 0.016202395883680012489414
+47  0.46 0.019104058063455893468063
+48  0.47 0.022396090888238712190983
+49  0.48 0.026108891760260724557163
+50  0.49 0.030271738401603350693270
+51  0.50 0.034912109375000000000000
+52  0.51 0.040054935265759247786654
+53  0.52 0.045721785472557813223560
+54  0.53 0.051929997650269794917666
+55  0.54 0.058691759112187109892478
+56  0.55 0.066013151913585171870480
+57  0.56 0.073893175879847339260209
+58  0.57 0.082322766480649178788553
+59  0.58 0.091283827150982640996624
+60  0.59 0.100748298377107803336372
+61  0.60 0.110677288550399974265126
+62  0.61 0.121020294186021296067857
+63  0.62 0.131714539539232816656167
+64  0.63 0.142684467853608692999856
+65  0.64 0.153841418356159997937738
+66  0.65 0.165083524577675833100443
+67  0.66 0.176295870514529273709314
+68  0.67 0.187350941441025264921905
+69  0.68 0.198109405696806906149732
+70  0.69 0.208421262366362686213606
+71  0.70 0.218127387277800038889453
+72  0.71 0.227061506001558721656863
+73  0.72 0.235052617336945240955615
+74  0.73 0.241927883929317605327114
+75  0.74 0.247515997940430942936274
+76  0.75 0.251651018857955932617188
+77  0.76 0.254176667317908611121169
+78  0.77 0.254951042946475026074182
+79  0.78 0.253851715405868760822017
+80  0.79 0.250781115731452675099433
+81  0.80 0.245672129331199973201194
+82  0.81 0.238493762317300350694893
+83  0.82 0.229256718762878120010384
+84  0.83 0.218018687608843075853571
+85  0.84 0.204889093845281006212034
+86  0.85 0.190033018789882574006711
+87  0.86 0.173673938286064311053991
+88  0.87 0.156094864919875092601487
+89  0.88 0.137637410351654609907968
+90  0.89 0.118698205988605046123929
+91  0.90 0.099722033868599957440182
+92  0.91 0.081190924130916650169887
+93  0.92 0.063608370128874824889209
+94  0.93 0.047477696369674228515922
+95  0.94 0.033273487288326450417308
+96  0.95 0.021404845577771974829417
+97  0.96 0.012169096569188462761413
+98  0.97 0.005694389107882650083448
+99  0.98 0.001869462582158711765404
+100 0.99 0.000258653273452518785418
+101 1.00 0.000000000000000000000000
+>
+```
+
+* Note that we can also graph the function:
+
+```R
+plot(x=p,y=likelihood,type="l",lty=1,lwd=2)
+```
+
+which gives us the following chart:
+
+<p align="center">
+<img src="/gfiles/like-plot.png" width="500px">
+</p>
