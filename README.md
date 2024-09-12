@@ -1769,3 +1769,72 @@ quantile(pvec,0.975)
 0.9138986 
 >
 ```
+
+#### 10. Validating the Different Confidence Intervals
+
+* Initial R code to set up the simulation:
+
+```R
+ns <- 13
+pi <- 10/13
+pi
+nsims <- 3000
+
+# draw/review a single sample
+
+yss <- ifelse(runif(n=ns,min=0,max=1)<pi,1,0)
+yss
+```
+
+* Here is our output:
+
+```Rout
+> ns <- 13
+> pi <- 10/13
+> pi
+[1] 0.7692308
+> nsims <- 3000
+> 
+> # draw/review a single sample
+> 
+> yss <- ifelse(runif(n=ns,min=0,max=1)<pi,1,0)
+> yss
+ [1] 0 0 1 1 1 0 1 1 1 1 0 1 1
+>
+```
+
+* Next, here is the Clopper-Pearson exact interval:
+
+```R
+lcl <- vector()
+ucl <- vector()
+
+for(i in 1:nsims){
+  yrs <- ifelse(runif(n=ns,min=0,max=1)<pi,1,0)
+  prs <- mean(yrs)
+  lcl[i] <- qbeta(0.025,sum(yrs),ns-sum(yrs)+1)
+  ucl[i] <- qbeta(0.975,sum(yrs)+1,ns-sum(yrs))
+  }
+
+hit <- ifelse(lcl<pi & ucl>pi,1,0)
+mean(hit)
+```
+
+* Here is our output:
+
+```Rout
+> lcl <- vector()
+> ucl <- vector()
+> 
+> for(i in 1:nsims){
++   yrs <- ifelse(runif(n=ns,min=0,max=1)<pi,1,0)
++   prs <- mean(yrs)
++   lcl[i] <- qbeta(0.025,sum(yrs),ns-sum(yrs)+1)
++   ucl[i] <- qbeta(0.975,sum(yrs)+1,ns-sum(yrs))
++   }
+> 
+> hit <- ifelse(lcl<pi & ucl>pi,1,0)
+> mean(hit)
+[1] 0.9873333
+>
+```
