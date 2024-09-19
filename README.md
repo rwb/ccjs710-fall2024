@@ -2596,6 +2596,23 @@ delta <- pi-pa
 delta
 ```
 
+* Here are the results:
+
+```R
+> t <- 0
+> pa <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0.7952*t))
+> pa
+[1] 0.108699
+> t <- 1
+> pi <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0.7952*t))
+> pi
+[1] 0.212671
+> delta <- pi-pa
+> delta
+[1] 0.103972
+>
+```
+
 * Next, we can use the bootstrap to build the confidence interval for delta:
 
 ```R
