@@ -2539,7 +2539,7 @@ y       A   I
 ```
 
 * Notice that this 90% confidence interval [0.034,0.174] does not include the number zero.
-* Here is another possibility:
+* Here is another way to approach the problem:
 
 ```R
 y <- c(rep(0,92-10),rep(1,10),rep(0,221-47),rep(1,47))
@@ -2679,8 +2679,10 @@ Number of Fisher Scoring iterations: 4
 0.1753778 
 > 
 ```
-
 * These results are very close to the 90% interval based on the normal approximation described above.
+
+#### 14. Normal Approximation Coverage Rate for Delta
+
 * For today, let's check on the coverage rates of the normal approximation:
 
 ```R
