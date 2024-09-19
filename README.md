@@ -1659,3 +1659,1121 @@ which yields the following output:
 [1] 0.923739
 >
 ```
+
+### Lesson 4 - Thursday 9/19/24
+
+* First assignments returned; next assignment will be distributed next week (due on 10/3).
+* Proportions (continued)
+* Contingency tables
+
+#### 10. Confidence Intervals for Proportions
+
+* At the the end of last week's class, we considered how to use a logistic regression model with just an intercept to calculate a (95%) confidence interval for a proportion.
+* Recall that the inference was based on a sample proportion of r = 10 countercylical movements in robbery rates across N = 13 business cycles; thus the sample estimate of p = r/N = 10/13 = 0.769.
+* The logistic regression-based 95% confidence interval of p was estimated to be [0.479,0.924] which includes the value p = 0.5.
+* Approach #2: normal approximation to the binomial (often presented in statistics textbooks):
+
+```R
+r <- 10
+N <- 13
+p <- r/N
+p
+vp <- p*(1-p)/N
+vp
+sp <- sqrt(vp)
+sp
+mult <- qnorm(0.975)
+mult
+lcl <- p-mult*sp
+lcl
+ucl <- p+mult*sp
+ucl
+```
+
+which gives the following output:
+
+```Rout
+> r <- 10
+> N <- 13
+> p <- r/N
+> p
+[1] 0.7692308
+> vp <- p*(1-p)/N
+> vp
+[1] 0.01365498
+> sp <- sqrt(vp)
+> sp
+[1] 0.1168545
+> mult <- qnorm(0.975)
+> mult
+[1] 1.959964
+> lcl <- p-mult*sp
+> lcl
+[1] 0.5402001
+> ucl <- p+mult*sp
+> ucl
+[1] 0.9982615
+> 
+```
+
+* Notice that this confidence interval does not include 0.5. Also notice that there is nothing to prevent this confidence interval from having a lower limit that is less than zero or an upper limit that is greater than 1.0. For example, here is a 99% confidence interval:
+
+```R
+r <- 10
+N <- 13
+p <- r/N
+p
+vp <- p*(1-p)/N
+vp
+sp <- sqrt(vp)
+sp
+mult <- qnorm(0.995)
+mult
+lcl <- p-mult*sp
+lcl
+ucl <- p+mult*sp
+ucl
+```
+
+which gives us the following interval:
+
+```Rout
+> r <- 10
+> N <- 13
+> p <- r/N
+> p
+[1] 0.7692308
+> vp <- p*(1-p)/N
+> vp
+[1] 0.01365498
+> sp <- sqrt(vp)
+> sp
+[1] 0.1168545
+> mult <- qnorm(0.995)
+> mult
+[1] 2.575829
+> lcl <- p-mult*sp
+> lcl
+[1] 0.4682334
+> ucl <- p+mult*sp
+> ucl
+[1] 1.070228
+> 
+```
+
+* Now, the lower limit is below 0.5 (as we would expect based on the hypothesis test reported in the article and the logistic regression results) but the upper limit is well over 1.0 which can't be right.
+
+* Still another approach would be to rely directly on the binomial distribution to calculate a confidence interval. This is the so-called Clopper-Pearson confidence interval for p which relies on the *beta distribution*:
+
+```R
+r <- 10
+N <- 13
+lcl <- qbeta(0.025,shape1=r,shape2=N-r+1)
+lcl
+ucl <- qbeta(0.975,shape1=r+1,shape2=N-r)
+ucl
+```
+
+and the lower and upper confidence limits are estimated to be:
+
+```Rout
+> r <- 10
+> N <- 13
+> lcl <- qbeta(0.025,shape1=r,shape2=N-r+1)
+> lcl
+[1] 0.4618685
+> ucl <- qbeta(0.975,shape1=r+1,shape2=N-r)
+> ucl
+[1] 0.9496189
+```
+
+* Notice that this 95% interval is wider than the 95% logistic regression interval (signaling greater uncertainty). Unlike the normal approximation interval, this interval will always respect the [0,1] boundaries for a proportion.
+
+* Another interval we will consider is the 95% Bayesian credibility interval for the proportion based on the Jeffreys prior. It has been established that this interval has good confidence interval properties in small samples. And, like the Clopper-Pearson interval, it relies on the beta distribution:
+
+```R
+r <- 10
+N <- 13
+lcl <- qbeta(0.025,shape1=r+1/2,shape2=N-r+1/2)
+lcl
+ucl <- qbeta(0.975,shape1=r+1/2,shape2=N-r+1/2)
+ucl
+```
+
+* Here is the output:
+
+```Rout
+> r <- 10
+> N <- 13
+> lcl <- qbeta(0.025,shape1=r+1/2,shape2=N-r+1/2)
+> lcl
+[1] 0.5026279
+> ucl <- qbeta(0.975,shape1=r+1/2,shape2=N-r+1/2)
+> ucl
+[1] 0.9303433
+> 
+```
+
+* Notice that this interval has a shorter width than either the Clopper-Pearson interval or the logistic regression interval. Notice also that both the logistic regression and the Clopper-Pearson intervals include 0.5 within the range of uncertainty. In contrast, the normal approximation interval excludes 0.5 but is wider than all of the other intervals. 
+
+* Finally, we will consider an interval based on the (percentile) bootstrap. When we use the bootstrap we draw samples repeatedly from the sample (with replacement). Here is how it works for this problem:
+
+```R
+set.seed(11)
+r <- 10
+N <- 13
+y <- c(rep(0,N-r),rep(1,r))
+y
+mean(y)
+
+# draw a bootstrap sample
+
+sb <- sample(1:N,size=N,replace=T)
+sb
+ysb <- y[sb]
+mean(ysb)
+
+# draw another bootstrap sample
+
+sb <- sample(1:N,size=N,replace=T)
+sb
+ysb <- y[sb]
+mean(ysb)
+
+# now let's draw a bunch of bootstrap samples
+
+pb <- vector()
+
+for(i in 1:10000){
+  b <- sample(1:N,size=N,replace=T)
+  yb <- y[b]
+  pb[i] <- mean(yb)
+  }
+
+lcl.boot <- quantile(pb,0.025)
+lcl.boot
+ucl.boot <- quantile(pb,0.975)
+ucl.boot
+```
+
+* Here is our output:
+
+```Rout
+> set.seed(11)
+> r <- 10
+> N <- 13
+> y <- c(rep(0,N-r),rep(1,r))
+> y
+ [1] 0 0 0 1 1 1 1 1 1 1 1 1 1
+> mean(y)
+[1] 0.7692308
+> 
+> # draw a bootstrap sample
+> 
+> sb <- sample(1:N,size=N,replace=T)
+> sb
+ [1] 10  2  8  9  1  5 12  6 12  5  6  7  5
+> ysb <- y[sb]
+> mean(ysb)
+[1] 0.8461538
+> 
+> # draw another bootstrap sample
+> 
+> sb <- sample(1:N,size=N,replace=T)
+> sb
+ [1]  3 13 11  7 13  2  1  8  7  6  3  3 11
+> ysb <- y[sb]
+> mean(ysb)
+[1] 0.6153846
+> 
+> # now let's draw a bunch of bootstrap samples
+> 
+> pb <- vector()
+> 
+> for(i in 1:10000){
++   b <- sample(1:N,size=N,replace=T)
++   yb <- y[b]
++   pb[i] <- mean(yb)
++   }
+> 
+> lcl.boot <- quantile(pb,0.025)
+> lcl.boot
+     2.5% 
+0.5384615 
+> ucl.boot <- quantile(pb,0.975)
+> ucl.boot
+97.5% 
+    1 
+> 
+```
+
+* So, our bootstrap-based 95% confidence interval is [0.538,1.0]. Notice that this interval also obeys the constraint that a proportion cannot be lower than zero or greater than one.
+* Now we have five different ways of calculating a confidence interval for this proportion. Which approach works the best in this situation? Let's find out.
+
+* Here is a simulation:
+
+```R
+set.seed(333)
+N <- 13
+pop.p <- 10/13
+pop.p
+mult <- qnorm(0.975)
+mult
+
+lcl.logit <- vector()
+ucl.logit <- vector()
+lcl.normal <- vector()
+ucl.normal <- vector()
+lcl.cp <- vector()
+ucl.cp <- vector()
+lcl.jp <- vector()
+ucl.jp <- vector()
+lcl.b <- vector()
+ucl.b <- vector()
+
+for(i in 1:3000) {
+  r <- rbinom(n=1,size=N,p=pop.p)
+  y <- c(rep(0,N-r),rep(1,r))
+
+  # logistic regression
+
+  M <- glm(y~1,family="binomial")
+  int <- coef(M)[1]
+  se.int <- sqrt(vcov(M)[1,1])
+  lcl.logit[i] <- exp(int-mult*se.int)/(1+exp(int-mult*se.int))
+  ucl.logit[i] <- exp(int+mult*se.int)/(1+exp(int+mult*se.int))
+
+  # normal approximation to the binomial
+
+  phat <- mean(y)
+  se.phat <- sqrt(phat*(1-phat)/N)
+  lcl.normal[i] <- phat-mult*se.phat
+  ucl.normal[i] <- phat+mult*se.phat
+
+  # Clopper-Pearson
+
+  lcl.cp[i] <- qbeta(0.025,shape1=r,shape2=N-r+1)
+  ucl.cp[i] <- qbeta(0.975,shape1=r+1,shape2=N-r)
+
+  # Jeffreys Prior
+
+  lcl.jp[i] <- qbeta(0.025,shape1=r+1/2,shape2=N-r+1/2)
+  ucl.jp[i] <- qbeta(0.975,shape1=r+1/2,shape2=N-r+1/2)
+
+  # bootstrap
+
+  pb <- vector()
+
+  for(j in 1:3000){
+    b <- sample(1:N,size=N,replace=T)
+    yb <- y[b]
+    pb[j] <- mean(yb)
+    }
+
+  lcl.b[i] <- quantile(pb,0.025)
+  ucl.b[i] <- quantile(pb,0.975)
+  }
+
+table(is.na(lcl.logit))
+table(is.na(ucl.logit))
+ucl.logit[is.na(ucl.logit)] <- 1
+lr.trap <- mean(ifelse(lcl.logit<pop.p & ucl.logit>pop.p,1,0))
+lr.trap
+na.trap <- mean(ifelse(lcl.normal<pop.p & ucl.normal>pop.p,1,0))
+na.trap
+table(ucl.normal>1)
+cp.trap <- mean(ifelse(lcl.cp<pop.p & ucl.cp>pop.p,1,0))
+cp.trap
+jp.trap <- mean(ifelse(lcl.jp<pop.p & ucl.jp>pop.p,1,0))
+jp.trap
+b.trap <- mean(ifelse(lcl.b<pop.p & ucl.b>pop.p,1,0))
+b.trap
+```
+
+* Here is our output:
+
+```Rout
+> set.seed(333)
+> N <- 13
+> pop.p <- 10/13
+> pop.p
+[1] 0.7692308
+> mult <- qnorm(0.975)
+> mult
+[1] 1.959964
+> 
+> lcl.logit <- vector()
+> ucl.logit <- vector()
+> lcl.normal <- vector()
+> ucl.normal <- vector()
+> lcl.cp <- vector()
+> ucl.cp <- vector()
+> lcl.jp <- vector()
+> ucl.jp <- vector()
+> lcl.b <- vector()
+> ucl.b <- vector()
+> 
+> for(i in 1:3000) {
++   r <- rbinom(n=1,size=N,p=pop.p)
++   y <- c(rep(0,N-r),rep(1,r))
++ 
++   # logistic regression
++ 
++   M <- glm(y~1,family="binomial")
++   int <- coef(M)[1]
++   se.int <- sqrt(vcov(M)[1,1])
++   lcl.logit[i] <- exp(int-mult*se.int)/(1+exp(int-mult*se.int))
++   ucl.logit[i] <- exp(int+mult*se.int)/(1+exp(int+mult*se.int))
++ 
++   # normal approximation to the binomial
++ 
++   phat <- mean(y)
++   se.phat <- sqrt(phat*(1-phat)/N)
++   lcl.normal[i] <- phat-mult*se.phat
++   ucl.normal[i] <- phat+mult*se.phat
++ 
++   # Clopper-Pearson
++ 
++   lcl.cp[i] <- qbeta(0.025,shape1=r,shape2=N-r+1)
++   ucl.cp[i] <- qbeta(0.975,shape1=r+1,shape2=N-r)
++ 
++   # Jeffreys Prior
++ 
++   lcl.jp[i] <- qbeta(0.025,shape1=r+1/2,shape2=N-r+1/2)
++   ucl.jp[i] <- qbeta(0.975,shape1=r+1/2,shape2=N-r+1/2)
++ 
++   # bootstrap
++ 
++   pb <- vector()
++ 
++   for(j in 1:3000){
++     b <- sample(1:N,size=N,replace=T)
++     yb <- y[b]
++     pb[j] <- mean(yb)
++     }
++ 
++   lcl.b[i] <- quantile(pb,0.025)
++   ucl.b[i] <- quantile(pb,0.975)
++   }
+> 
+> table(is.na(lcl.logit))
+
+FALSE 
+ 3000 
+> table(is.na(ucl.logit))
+
+FALSE  TRUE 
+ 2907    93 
+> ucl.logit[is.na(ucl.logit)] <- 1
+> lr.trap <- mean(ifelse(lcl.logit<pop.p & ucl.logit>pop.p,1,0))
+> lr.trap
+[1] 0.9836667
+> na.trap <- mean(ifelse(lcl.normal<pop.p & ucl.normal>pop.p,1,0))
+> na.trap
+[1] 0.821
+> table(ucl.normal>1)
+
+FALSE  TRUE 
+ 1900  1100 
+> cp.trap <- mean(ifelse(lcl.cp<pop.p & ucl.cp>pop.p,1,0))
+> cp.trap
+[1] 0.9836667
+> jp.trap <- mean(ifelse(lcl.jp<pop.p & ucl.jp>pop.p,1,0))
+> jp.trap
+[1] 0.9526667
+> b.trap <- mean(ifelse(lcl.b<pop.p & ucl.b>pop.p,1,0))
+> b.trap
+[1] 0.787
+> 
+```
+
+* There are some pretty clear patterns here. What conclusions would you draw?
+* Now, let's see what happens to all of these methods when we scale up our number of trials by a factor of 7.
+
+```R
+set.seed(107)
+N <- 13*7
+pop.p <- 10/13
+pop.p
+mult <- qnorm(0.975)
+mult
+
+lcl.logit <- vector()
+ucl.logit <- vector()
+lcl.normal <- vector()
+ucl.normal <- vector()
+lcl.cp <- vector()
+ucl.cp <- vector()
+lcl.jp <- vector()
+ucl.jp <- vector()
+lcl.b <- vector()
+ucl.b <- vector()
+
+for(i in 1:3000) {
+  r <- rbinom(n=1,size=N,p=pop.p)
+  y <- c(rep(0,N-r),rep(1,r))
+
+  # logistic regression
+
+  M <- glm(y~1,family="binomial")
+  int <- coef(M)[1]
+  se.int <- sqrt(vcov(M)[1,1])
+  lcl.logit[i] <- exp(int-mult*se.int)/(1+exp(int-mult*se.int))
+  ucl.logit[i] <- exp(int+mult*se.int)/(1+exp(int+mult*se.int))
+
+  # normal approximation to the binomial
+
+  phat <- mean(y)
+  se.phat <- sqrt(phat*(1-phat)/N)
+  lcl.normal[i] <- phat-mult*se.phat
+  ucl.normal[i] <- phat+mult*se.phat
+
+  # Clopper-Pearson
+
+  lcl.cp[i] <- qbeta(0.025,shape1=r,shape2=N-r+1)
+  ucl.cp[i] <- qbeta(0.975,shape1=r+1,shape2=N-r)
+
+  # Jeffreys Prior
+
+  lcl.jp[i] <- qbeta(0.025,shape1=r+1/2,shape2=N-r+1/2)
+  ucl.jp[i] <- qbeta(0.975,shape1=r+1/2,shape2=N-r+1/2)
+
+  # bootstrap
+
+  pb <- vector()
+
+  for(j in 1:3000){
+    b <- sample(1:N,size=N,replace=T)
+    yb <- y[b]
+    pb[j] <- mean(yb)
+    }
+
+  lcl.b[i] <- quantile(pb,0.025)
+  ucl.b[i] <- quantile(pb,0.975)
+  }
+
+table(is.na(lcl.logit))
+table(is.na(ucl.logit))
+ucl.logit[is.na(ucl.logit)] <- 1
+lr.trap <- mean(ifelse(lcl.logit<pop.p & ucl.logit>pop.p,1,0))
+lr.trap
+na.trap <- mean(ifelse(lcl.normal<pop.p & ucl.normal>pop.p,1,0))
+na.trap
+table(ucl.normal>1)
+cp.trap <- mean(ifelse(lcl.cp<pop.p & ucl.cp>pop.p,1,0))
+cp.trap
+jp.trap <- mean(ifelse(lcl.jp<pop.p & ucl.jp>pop.p,1,0))
+jp.trap
+b.trap <- mean(ifelse(lcl.b<pop.p & ucl.b>pop.p,1,0))
+b.trap
+```
+
+* And, here is our output:
+
+```Rout
+> set.seed(107)
+> N <- 13*7
+> pop.p <- 10/13
+> pop.p
+[1] 0.7692308
+> mult <- qnorm(0.975)
+> mult
+[1] 1.959964
+> 
+> lcl.logit <- vector()
+> ucl.logit <- vector()
+> lcl.normal <- vector()
+> ucl.normal <- vector()
+> lcl.cp <- vector()
+> ucl.cp <- vector()
+> lcl.jp <- vector()
+> ucl.jp <- vector()
+> lcl.b <- vector()
+> ucl.b <- vector()
+> 
+> for(i in 1:3000) {
++   r <- rbinom(n=1,size=N,p=pop.p)
++   y <- c(rep(0,N-r),rep(1,r))
++ 
++   # logistic regression
++ 
++   M <- glm(y~1,family="binomial")
++   int <- coef(M)[1]
++   se.int <- sqrt(vcov(M)[1,1])
++   lcl.logit[i] <- exp(int-mult*se.int)/(1+exp(int-mult*se.int))
++   ucl.logit[i] <- exp(int+mult*se.int)/(1+exp(int+mult*se.int))
++ 
++   # normal approximation to the binomial
++ 
++   phat <- mean(y)
++   se.phat <- sqrt(phat*(1-phat)/N)
++   lcl.normal[i] <- phat-mult*se.phat
++   ucl.normal[i] <- phat+mult*se.phat
++ 
++   # Clopper-Pearson
++ 
++   lcl.cp[i] <- qbeta(0.025,shape1=r,shape2=N-r+1)
++   ucl.cp[i] <- qbeta(0.975,shape1=r+1,shape2=N-r)
++ 
++   # Jeffreys Prior
++ 
++   lcl.jp[i] <- qbeta(0.025,shape1=r+1/2,shape2=N-r+1/2)
++   ucl.jp[i] <- qbeta(0.975,shape1=r+1/2,shape2=N-r+1/2)
++ 
++   # bootstrap
++ 
++   pb <- vector()
++ 
++   for(j in 1:3000){
++     b <- sample(1:N,size=N,replace=T)
++     yb <- y[b]
++     pb[j] <- mean(yb)
++     }
++ 
++   lcl.b[i] <- quantile(pb,0.025)
++   ucl.b[i] <- quantile(pb,0.975)
++   }
+> 
+> table(is.na(lcl.logit))
+
+FALSE 
+ 3000 
+> table(is.na(ucl.logit))
+
+FALSE 
+ 3000 
+> ucl.logit[is.na(ucl.logit)] <- 1
+> lr.trap <- mean(ifelse(lcl.logit<pop.p & ucl.logit>pop.p,1,0))
+> lr.trap
+[1] 0.9346667
+> na.trap <- mean(ifelse(lcl.normal<pop.p & ucl.normal>pop.p,1,0))
+> na.trap
+[1] 0.9313333
+> table(ucl.normal>1)
+
+FALSE 
+ 3000 
+> cp.trap <- mean(ifelse(lcl.cp<pop.p & ucl.cp>pop.p,1,0))
+> cp.trap
+[1] 0.9666667
+> jp.trap <- mean(ifelse(lcl.jp<pop.p & ucl.jp>pop.p,1,0))
+> jp.trap
+[1] 0.9526667
+> b.trap <- mean(ifelse(lcl.b<pop.p & ucl.b>pop.p,1,0))
+> b.trap
+[1] 0.9253333
+> 
+```
+
+### 11. Contingency Tables
+
+* Consider the following real dataset from the Minneapolis Domestic Violence Experiment:
+
+```R
+# arrest group
+
+na <- 92
+ra <- 10
+
+# informal group
+
+ni <- 108+113
+ri <- 21+26
+
+# calculate the failure rates
+
+ra/na
+ri/ni
+```
+
+* Here is our output:
+
+```Rout
+> # arrest group
+> 
+> na <- 92
+> ra <- 10
+> 
+> # informal group
+> 
+> ni <- 108+113
+> ri <- 21+26
+> 
+> # calculate the failure rates
+> 
+> ra/na
+[1] 0.1086957
+> ri/ni
+[1] 0.2126697
+> 
+```
+
+* This information can be presented in a 2x2 contingency table as follows:
+
+```R
+t <- c(rep("A",92),rep("I",221))
+y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+table(y,t)
+```
+
+* The output is:
+
+```Rout
+> t <- c(rep("A",92),rep("I",221))
+> y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+> table(y,t)
+     t
+y       A   I
+  no   82 174
+  yes  10  47
+> 
+```
+
+* Next, let's consider some ways of interpreting this table. The most obvious way is to examine the 2 failure rates like we did above:
+
+```R
+# work with the raw numbers
+
+pa <- 10/(82+10)
+pa
+pi <- 47/(174+47)
+pi
+```
+
+* which yields:
+
+```Rout
+> # work with the raw numbers
+> 
+> pa <- 10/(82+10)
+> pa
+[1] 0.1086957
+> pi <- 47/(174+47)
+> pi
+[1] 0.2126697
+> 
+```
+
+* Another approach is to do arithmetic on the table:
+
+```R
+t <- c(rep("A",92),rep("I",221))
+y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+mt <- table(y,t)
+mt
+
+c11 <- mt[1,1]
+c11
+c12 <- mt[1,2]
+c12
+c21 <- mt[2,1]
+c21
+c22 <- mt[2,2]
+c22
+
+pa <- c21/(c11+c21)
+pa
+pi <- c22/(c12+c22)
+pi
+```
+
+* Here is our output:
+
+```Rout
+> t <- c(rep("A",92),rep("I",221))
+> y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+> mt <- table(y,t)
+> mt
+     t
+y       A   I
+  no   82 174
+  yes  10  47
+> 
+> c11 <- mt[1,1]
+> c11
+[1] 82
+> c12 <- mt[1,2]
+> c12
+[1] 174
+> c21 <- mt[2,1]
+> c21
+[1] 10
+> c22 <- mt[2,2]
+> c22
+[1] 47
+> 
+> pa <- c21/(c11+c21)
+> pa
+[1] 0.1086957
+> pi <- c22/(c12+c22)
+> pi
+[1] 0.2126697
+> 
+```
+
+#### 12. Classical/Average Treatment Effect (C/ATE)
+
+* Building on this, we can compute what is often called the *classical treatment effect* (CTE; a term used by Manski and Nagin (1998; Bounding disagreements about treatment effects: a case study of sentencing and recidivism. Sociological Methodology, 28:99-137) or the population *average treatment effect* (ATE; a more commonly used term) by:
+
+```R
+cte <- pi-pa
+cte
+```
+
+* We can interpret both the sign and the magnitude of this difference:
+
+```Rout
+> cte <- pi-pa
+> cte
+[1] 0.103974
+> 
+```
+
+* The sign means that the informal group had a higher failure rate than the arrested group. The 0.104 statistic means that the failure rate was 10.4 percentage points higher in the informal group (21.3%) than it was in the arrested group (10.9%). The ordering of the groups is arbitrary.
+
+#### 13. Inference About the C/ATE
+
+* It is insufficient to present a treatment effect estimate without a measure of uncertainty to accompany the estimate. 
+* As a starting point, it is useful to think about a 90% confidence interval for the difference between the two proportions (failure rates).
+* The normal approximation to the binomial is the standard textbook formula for the difference between two proportions:
+
+```R
+t <- c(rep("A",92),rep("I",221))
+y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+mt <- table(y,t)
+mt
+
+c11 <- mt[1,1]
+c11
+c12 <- mt[1,2]
+c12
+c21 <- mt[2,1]
+c21
+c22 <- mt[2,2]
+c22
+
+pa <- c21/(c11+c21)
+pa
+pi <- c22/(c12+c22)
+pi
+
+ta <- c11+c21
+ta
+ti <- c12+c22
+ti
+
+delta <- pi-pa
+delta
+
+se.delta.pt1 <- pi*(1-pi)/ti
+se.delta.pt2 <- pa*(1-pa)/ta
+se.delta <- sqrt(se.delta.pt1+se.delta.pt2)
+
+mult <- qnorm(0.95)
+mult
+
+lcl.delta <- delta-mult*se.delta
+lcl.delta
+ucl.delta <- delta+mult*se.delta
+ucl.delta
+```
+
+* Here is our output:
+
+```Rout
+> t <- c(rep("A",92),rep("I",221))
+> y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+> mt <- table(y,t)
+> mt
+     t
+y       A   I
+  no   82 174
+  yes  10  47
+> 
+> c11 <- mt[1,1]
+> c11
+[1] 82
+> c12 <- mt[1,2]
+> c12
+[1] 174
+> c21 <- mt[2,1]
+> c21
+[1] 10
+> c22 <- mt[2,2]
+> c22
+[1] 47
+> 
+> pa <- c21/(c11+c21)
+> pa
+[1] 0.1086957
+> pi <- c22/(c12+c22)
+> pi
+[1] 0.2126697
+> 
+> ta <- c11+c21
+> ta
+[1] 92
+> ti <- c12+c22
+> ti
+[1] 221
+> 
+> delta <- pi-pa
+> delta
+[1] 0.103974
+> 
+> se.delta.pt1 <- pi*(1-pi)/ti
+> se.delta.pt2 <- pa*(1-pa)/ta
+> se.delta <- sqrt(se.delta.pt1+se.delta.pt2)
+> 
+> mult <- qnorm(0.95)
+> mult
+[1] 1.644854
+> 
+> lcl.delta <- delta-mult*se.delta
+> lcl.delta
+[1] 0.03398157
+> ucl.delta <- delta+mult*se.delta
+> ucl.delta
+[1] 0.1739665
+> 
+```
+
+* Notice that this 90% confidence interval [0.034,0.174] does not include the number zero.
+* Here is another possibility:
+
+```R
+y <- c(rep(0,92-10),rep(1,10),rep(0,221-47),rep(1,47))
+t <- c(rep("A",92),rep("I",221))
+table(y,t)
+M <- glm(y~1+as.factor(t),family="binomial")
+summary(M)
+```
+
+* Here is our output:
+
+```Rout
+> y <- c(rep(0,92-10),rep(1,10),rep(0,221-47),rep(1,47))
+> t <- c(rep("A",92),rep("I",221))
+> table(y,t)
+   t
+y     A   I
+  0  82 174
+  1  10  47
+> M <- glm(y~1+as.factor(t),family="binomial")
+> summary(M)
+
+Call:
+glm(formula = y ~ 1 + as.factor(t), family = "binomial")
+
+Coefficients:
+              Estimate Std. Error z value Pr(>|z|)    
+(Intercept)    -2.1041     0.3349  -6.282 3.34e-10 ***
+as.factor(t)I   0.7952     0.3731   2.131   0.0331 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 297.08  on 312  degrees of freedom
+Residual deviance: 291.98  on 311  degrees of freedom
+AIC: 295.98
+
+Number of Fisher Scoring iterations: 4
+
+> 
+```
+
+* Now, we can use this information to recover the estimated failure rates:
+
+```R
+t <- 0
+pa <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0*0.7952*t))
+pa
+t <- 1
+pi <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0.7952*t))
+pi
+delta <- pi-pa
+delta
+```
+
+* Next, we can use the bootstrap to build the confidence interval for delta:
+
+```R
+set.seed(387)
+y <- c(rep(0,92-10),rep(1,10),rep(0,221-47),rep(1,47))
+t <- c(rep("A",92),rep("I",221))
+table(y,t)
+M <- glm(y~1+as.factor(t),family="binomial")
+summary(M)
+
+deltab <- vector()
+
+for(i in 1:3000){
+  b <- sample(1:313,size=313,replace=T)
+  yb <- y[b]
+  tb <- t[b]
+  Mb <- glm(yb~1+as.factor(tb),family="binomial")
+  intb <- coef(Mb)[1]
+  slopeb <- coef(Mb)[2]
+  pa <- exp(intb)/(1+exp(intb))
+  pi <- exp(intb+slopeb)/(1+exp(intb+slopeb))
+  deltab[i] <- pi-pa
+  }
+
+quantile(deltab,0.05)
+quantile(deltab,0.95)
+```
+
+* Here is our output:
+
+```Rout
+> set.seed(387)
+> y <- c(rep(0,92-10),rep(1,10),rep(0,221-47),rep(1,47))
+> t <- c(rep("A",92),rep("I",221))
+> table(y,t)
+   t
+y     A   I
+  0  82 174
+  1  10  47
+> M <- glm(y~1+as.factor(t),family="binomial")
+> summary(M)
+
+Call:
+glm(formula = y ~ 1 + as.factor(t), family = "binomial")
+
+Coefficients:
+              Estimate Std. Error z value Pr(>|z|)    
+(Intercept)    -2.1041     0.3349  -6.282 3.34e-10 ***
+as.factor(t)I   0.7952     0.3731   2.131   0.0331 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 297.08  on 312  degrees of freedom
+Residual deviance: 291.98  on 311  degrees of freedom
+AIC: 295.98
+
+Number of Fisher Scoring iterations: 4
+
+> 
+> deltab <- vector()
+> 
+> for(i in 1:3000){
++   b <- sample(1:313,size=313,replace=T)
++   yb <- y[b]
++   tb <- t[b]
++   Mb <- glm(yb~1+as.factor(tb),family="binomial")
++   intb <- coef(Mb)[1]
++   slopeb <- coef(Mb)[2]
++   pa <- exp(intb)/(1+exp(intb))
++   pi <- exp(intb+slopeb)/(1+exp(intb+slopeb))
++   deltab[i] <- pi-pa
++   }
+> 
+> quantile(deltab,0.05)
+        5% 
+0.03367814 
+> quantile(deltab,0.95)
+      95% 
+0.1753778 
+> 
+```
+
+* These results are very close to the 90% interval based on the normal approximation described above.
+* For today, let's check on the coverage rates of the normal approximation:
+
+```R
+set.seed(503)
+na <- 92
+ni <- 221
+pa <- 10/92
+pa
+pi <- 47/221
+pi
+pop.delta <- pi-pa
+pop.delta
+mult <- qnorm(0.95)
+mult
+
+delta <- vector()
+se.delta <- vector()
+lcl.normal <- vector()
+ucl.normal <- vector()
+lcl.boot <- vector()
+ucl.boot <- vector()
+
+for(i in 1:10000) {
+  ra <- ifelse(runif(n=na,min=0,max=1)<pa,1,0)
+  ri <- ifelse(runif(n=ni,min=0,max=1)<pi,1,0)
+  phata <- mean(ra)
+  phati <- mean(ri)
+  delta[i] <- phati-phata
+  var.phata <- phata*(1-phata)/na
+  var.phati <- phati*(1-phati)/ni
+  se.delta[i] <- sqrt(var.phata+var.phati)
+  lcl.normal[i] <- delta[i]-mult*se.delta[i]
+  ucl.normal[i] <- delta[i]+mult*se.delta[i] 
+  }
+
+mean(delta)
+sd(delta)
+mean(se.delta)
+mean(lcl.normal)
+mean(ucl.normal)
+mean(ifelse(lcl.normal<pop.delta & ucl.normal>pop.delta,1,0))
+```
+
+* And, here is our output:
+
+```Rout
+> set.seed(503)
+> na <- 92
+> ni <- 221
+> pa <- 10/92
+> pa
+[1] 0.1086957
+> pi <- 47/221
+> pi
+[1] 0.2126697
+> pop.delta <- pi-pa
+> pop.delta
+[1] 0.103974
+> mult <- qnorm(0.95)
+> mult
+[1] 1.644854
+> 
+> delta <- vector()
+> se.delta <- vector()
+> lcl.normal <- vector()
+> ucl.normal <- vector()
+> lcl.boot <- vector()
+> ucl.boot <- vector()
+> 
+> for(i in 1:10000) {
++   ra <- ifelse(runif(n=na,min=0,max=1)<pa,1,0)
++   ri <- ifelse(runif(n=ni,min=0,max=1)<pi,1,0)
++   phata <- mean(ra)
++   phati <- mean(ri)
++   delta[i] <- phati-phata
++   var.phata <- phata*(1-phata)/na
++   var.phati <- phati*(1-phati)/ni
++   se.delta[i] <- sqrt(var.phata+var.phati)
++   lcl.normal[i] <- delta[i]-mult*se.delta[i]
++   ucl.normal[i] <- delta[i]+mult*se.delta[i] 
++   }
+> 
+> mean(delta)
+[1] 0.1043082
+> sd(delta)
+[1] 0.04284055
+> mean(se.delta)
+[1] 0.0422513
+> mean(lcl.normal)
+[1] 0.03481097
+> mean(ucl.normal)
+[1] 0.1738054
+> mean(ifelse(lcl.normal<pop.delta & ucl.normal>pop.delta,1,0))
+[1] 0.8925
+> 
+```
