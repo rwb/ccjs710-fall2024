@@ -2265,7 +2265,7 @@ FALSE
 > 
 ```
 
-### 11. Contingency Tables
+#### 11. Contingency Tables
 
 * Consider the following real dataset from the Minneapolis Domestic Violence Experiment:
 
