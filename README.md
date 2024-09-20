@@ -2411,7 +2411,7 @@ y       A   I
 > 
 ```
 
-#### 12. Classical/Average Treatment Effect (C/ATE)
+#### 12. Classical/Average Treatment Effect (C/ATE; Delta)
 
 * Building on this, we can compute what is often called the *classical treatment effect* (CTE; a term used by Manski and Nagin (1998; Bounding disagreements about treatment effects: a case study of sentencing and recidivism. Sociological Methodology, 28:99-137) or the population *average treatment effect* (ATE; a more commonly used term) by. We denote the C/ATE by the term, delta.
 
@@ -2431,7 +2431,7 @@ delta
 
 * The sign means that the informal group had a higher failure rate than the arrested group. The 0.104 statistic means that the failure rate was 10.4 percentage points higher in the informal group (21.3%) than it was in the arrested group (10.9%). The ordering of the groups is arbitrary.
 
-#### 13. Inference About the C/ATE
+#### 13. Inference About the C/ATE (Delta)
 
 * It is insufficient to present a treatment effect estimate without a measure of uncertainty to accompany the estimate. 
 * As a starting point, it is useful to think about a 90% confidence interval for the difference between the two proportions (failure rates).
@@ -2710,7 +2710,7 @@ Number of Fisher Scoring iterations: 4
 ```
 * These results are very close to the 90% interval based on the normal approximation described above.
 
-#### 14. Normal Approximation Coverage Rate for Delta
+#### 14. Normal Approximation Coverage Rate for C/ATE (Delta)
 
 * For today, let's check on the coverage rates of the normal approximation:
 
