@@ -2413,20 +2413,20 @@ y       A   I
 
 #### 12. Classical/Average Treatment Effect (C/ATE)
 
-* Building on this, we can compute what is often called the *classical treatment effect* (CTE; a term used by Manski and Nagin (1998; Bounding disagreements about treatment effects: a case study of sentencing and recidivism. Sociological Methodology, 28:99-137) or the population *average treatment effect* (ATE; a more commonly used term) by:
+* Building on this, we can compute what is often called the *classical treatment effect* (CTE; a term used by Manski and Nagin (1998; Bounding disagreements about treatment effects: a case study of sentencing and recidivism. Sociological Methodology, 28:99-137) or the population *average treatment effect* (ATE; a more commonly used term) by. We denote the C/ATE by the term, delta.
 
 ```R
-cte <- pi-pa
-cte
+delta <- pi-pa
+delta
 ```
 
 * We can interpret both the sign and the magnitude of this difference:
 
 ```Rout
-> cte <- pi-pa
-> cte
+> delta <- pi-pa
+> delta
 [1] 0.103974
-> 
+>
 ```
 
 * The sign means that the informal group had a higher failure rate than the arrested group. The 0.104 statistic means that the failure rate was 10.4 percentage points higher in the informal group (21.3%) than it was in the arrested group (10.9%). The ordering of the groups is arbitrary.
@@ -2586,12 +2586,18 @@ Number of Fisher Scoring iterations: 4
 * Now, we can use this information to recover the estimated failure rates:
 
 ```R
-t <- 0
-pa <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0.7952*t))
+# estimated failure rate among those in the arrest group
+
+pa <- exp(-2.1041)/(1+exp(-2.1041))
 pa
-t <- 1
-pi <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0.7952*t))
+
+# estimated failure rate among those in the informal group
+
+pi <- exp(-2.1041+0.7952)/(1+exp(-2.1041+0.7952))
 pi
+
+# C/ATE point estimate
+
 delta <- pi-pa
 delta
 ```
@@ -2599,18 +2605,24 @@ delta
 * Here are the results:
 
 ```R
-> t <- 0
-> pa <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0.7952*t))
+> # estimated failure rate among those in the arrest group
+> 
+> pa <- exp(-2.1041)/(1+exp(-2.1041))
 > pa
 [1] 0.108699
-> t <- 1
-> pi <- exp(-2.1041+0.7952*t)/(1+exp(-2.1041+0.7952*t))
+> 
+> # estimated failure rate among those in the informal group
+> 
+> pi <- exp(-2.1041+0.7952)/(1+exp(-2.1041+0.7952))
 > pi
 [1] 0.212671
+> 
+> # C/ATE point estimate
+> 
 > delta <- pi-pa
 > delta
 [1] 0.103972
->
+> 
 ```
 
 * Next, we can use the bootstrap to build the confidence interval for delta:
