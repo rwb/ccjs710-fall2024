@@ -3104,3 +3104,346 @@ and here are our results:
 * Here is the Minneapolis dataset again:
 
 ```R
+t <- c(rep("A",92),rep("I",221))
+y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+mt <- table(y,t)
+mt
+```
+
+* Here is the output:
+
+```Rout
+> t <- c(rep("A",92),rep("I",221))
+> y <- c(rep("no",92-10),rep("yes",10),rep("no",221-47),rep("yes",47))
+> mt <- table(y,t)
+> mt
+     t
+y       A   I
+  no   82 174
+  yes  10  47
+>
+```
+
+* We will begin our analysis with the so-called Classical Treatment Effect (due to Manski and Nagin, 1998).
+
+#### 19. Classical (Population Average) Treatment Effect
+
+* Next, we calculate the classical treatment effect, delta:
+
+```R
+py1x1 <- 47/(174+47)
+py1x1
+py1x0 <- 10/(82+10)
+py1x0
+delta <- py1x1-py1x0
+delta
+```
+
+* Here is the point estimate:
+
+```Rout
+> py1x1 <- 47/(174+47)
+> py1x1
+[1] 0.2126697
+> py1x0 <- 10/(82+10)
+> py1x0
+[1] 0.1086957
+> delta <- py1x1-py1x0
+> delta
+[1] 0.103974
+>
+```
+
+* Now, we calculate a 95% confidence interval for delta. First, we use the normal approximation to the binomial:
+
+```R
+nx1 <- 174+47
+nx0 <- 82+10
+se.delta.pt1 <- py1x1*(1-py1x1)/nx1
+se.delta.pt2 <- py1x0*(1-py1x0)/nx0
+se.delta <- sqrt(se.delta.pt1+se.delta.pt2)
+
+mult <- qnorm(0.975)
+mult
+
+lcl.delta <- delta-mult*se.delta
+lcl.delta
+ucl.delta <- delta+mult*se.delta
+ucl.delta
+```
+
+* And, here is the interval estimate:
+
+```Rout
+> nx1 <- 174+47
+> nx0 <- 82+10
+> se.delta.pt1 <- py1x1*(1-py1x1)/nx1
+> se.delta.pt2 <- py1x0*(1-py1x0)/nx0
+> se.delta <- sqrt(se.delta.pt1+se.delta.pt2)
+> 
+> mult <- qnorm(0.975)
+> mult
+[1] 1.959964
+> 
+> lcl.delta <- delta-mult*se.delta
+> lcl.delta
+[1] 0.02057287
+> ucl.delta <- delta+mult*se.delta
+> ucl.delta
+[1] 0.1873752
+>
+```
+
+* Let's use a 95% credibility interval with a Jeffreys' prior (Wasserman example 11.7):
+
+```R
+set.seed(719)
+na <- 82+10
+ra <- 10
+ni <- 174+47
+ri <- 47
+pa <- rbeta(n=100000,shape1=ra+1/2,shape2=na-ra+1/2)
+pi <- rbeta(n=100000,shape1=ri+1/2,shape2=ni-ri+1/2)
+delta <- pi-pa
+quantile(delta,0.025)
+quantile(delta,0.975)
+```
+
+* Here is the interval estimate:
+
+```Rout
+> set.seed(719)
+> na <- 82+10
+> ra <- 10
+> ni <- 174+47
+> ri <- 47
+> pa <- rbeta(n=100000,shape1=ra+1/2,shape2=na-ra+1/2)
+> pi <- rbeta(n=100000,shape1=ri+1/2,shape2=ni-ri+1/2)
+> delta <- pi-pa
+> quantile(delta,0.025)
+      2.5% 
+0.01334965 
+> quantile(delta,0.975)
+    97.5% 
+0.1811313 
+> 
+```
+
+* Finally, we use the (percentile) bootstrap:
+
+```R
+set.seed(837)
+ya <- c(rep(0,82),rep(1,10))
+na <- 82+10
+yi <- c(rep(0,174),rep(1,47))
+ni <- 174+47
+
+deltavec <- vector()
+
+for(i in 1:10000){
+  ba <- sample(1:na,size=na,replace=T)
+  bi <- sample(1:ni,size=ni,replace=T)
+  yab <- ya[ba]
+  yib <- yi[bi]
+  pab <- mean(yab)
+  pib <- mean(yib)
+  deltavec[i] <- pib-pab
+  }
+
+
+quantile(deltavec,0.025)
+quantile(deltavec,0.975)
+```
+
+* The percentile bootstrap confidence interval for delta is:
+
+```Rout
+> set.seed(837)
+> ya <- c(rep(0,82),rep(1,10))
+> na <- 82+10
+> yi <- c(rep(0,174),rep(1,47))
+> ni <- 174+47
+> 
+> deltavec <- vector()
+> 
+> for(i in 1:10000){
++   ba <- sample(1:na,size=na,replace=T)
++   bi <- sample(1:ni,size=ni,replace=T)
++   yab <- ya[ba]
++   yib <- yi[bi]
++   pab <- mean(yab)
++   pib <- mean(yib)
++   deltavec[i] <- pib-pab
++   }
+> 
+> 
+> quantile(deltavec,0.025)
+      2.5% 
+0.01888648 
+> quantile(deltavec,0.975)
+    97.5% 
+0.1854712 
+>
+```
+which is very close to the normal approximation interval.
+
+* Notice that the JP interval is slightly to the left of the normal approximation and bootstrap intervals. Which one has better repeated sample performance?
+* We can check on this with the following code:
+
+```R
+set.seed(719)
+pa <- 10/(82+10)
+pa
+pi <- 47/(174+47)
+pi
+delta <- pi-pa
+delta
+
+norm.lcl <- vector()
+norm.ucl <- vector()
+jp.lcl <- vector()
+jp.ucl <- vector()
+boot.lcl <- vector()
+boot.ucl <- vector()
+
+for(i in 1:3000){
+
+  ya <- ifelse(runif(n=92,min=0,max=1)<pa,1,0)
+  yi <- ifelse(runif(n=221,min=0,max=1)<pi,1,0)
+  pas <- mean(ya)
+  pis <- mean(yi)
+  deltas <- pis-pas
+
+  se.delta.pt1 <- pas*(1-pas)/92
+  se.delta.pt2 <- pis*(1-pis)/221
+  se.delta <- sqrt(se.delta.pt1+se.delta.pt2)
+  norm.lcl[i] <- deltas-1.96*se.delta
+  norm.ucl[i] <- deltas+1.96*se.delta
+
+  pas.beta <- rbeta(n=3000,shape1=sum(ya)+1/2,shape2=92-sum(ya)+1/2)
+  pis.beta <- rbeta(n=3000,shape1=sum(yi)+1/2,shape2=221-sum(yi)+1/2)
+  delta.beta <- pis.beta-pas.beta
+  jp.lcl[i] <- quantile(delta.beta,0.025)
+  jp.ucl[i] <- quantile(delta.beta,0.975)
+
+  bdeltavec <- vector()
+
+  for(j in 1:3000){
+    ba <- sample(1:92,size=92,replace=T)
+    bi <- sample(1:221,size=221,replace=T)
+    yab <- ya[ba]
+    yib <- yi[bi]
+    pab <- mean(yab)
+    pib <- mean(yib)
+    bdeltavec[j] <- pib-pab
+    }
+
+  boot.lcl[i] <- quantile(bdeltavec,0.025)
+  boot.ucl[i] <- quantile(bdeltavec,0.975)
+  }
+mean(ifelse(norm.lcl<delta & norm.ucl>delta,1,0))
+mean(ifelse(jp.lcl<delta & jp.ucl>delta,1,0))
+mean(ifelse(boot.lcl<delta & boot.ucl>delta,1,0))
+```
+
+* Here are the results:
+
+```Rout
+> set.seed(719)
+> pa <- 10/(82+10)
+> pa
+[1] 0.1086957
+> pi <- 47/(174+47)
+> pi
+[1] 0.2126697
+> delta <- pi-pa
+> delta
+[1] 0.103974
+> 
+> norm.lcl <- vector()
+> norm.ucl <- vector()
+> jp.lcl <- vector()
+> jp.ucl <- vector()
+> boot.lcl <- vector()
+> boot.ucl <- vector()
+> 
+> for(i in 1:3000){
++ 
++   ya <- ifelse(runif(n=92,min=0,max=1)<pa,1,0)
++   yi <- ifelse(runif(n=221,min=0,max=1)<pi,1,0)
++   pas <- mean(ya)
++   pis <- mean(yi)
++   deltas <- pis-pas
++ 
++   se.delta.pt1 <- pas*(1-pas)/92
++   se.delta.pt2 <- pis*(1-pis)/221
++   se.delta <- sqrt(se.delta.pt1+se.delta.pt2)
++   norm.lcl[i] <- deltas-1.96*se.delta
++   norm.ucl[i] <- deltas+1.96*se.delta
++ 
++   pas.beta <- rbeta(n=3000,shape1=sum(ya)+1/2,shape2=92-sum(ya)+1/2)
++   pis.beta <- rbeta(n=3000,shape1=sum(yi)+1/2,shape2=221-sum(yi)+1/2)
++   delta.beta <- pis.beta-pas.beta
++   jp.lcl[i] <- quantile(delta.beta,0.025)
++   jp.ucl[i] <- quantile(delta.beta,0.975)
++ 
++   bdeltavec <- vector()
++ 
++   for(j in 1:3000){
++     ba <- sample(1:92,size=92,replace=T)
++     bi <- sample(1:221,size=221,replace=T)
++     yab <- ya[ba]
++     yib <- yi[bi]
++     pab <- mean(yab)
++     pib <- mean(yib)
++     bdeltavec[j] <- pib-pab
++     }
++ 
++   boot.lcl[i] <- quantile(bdeltavec,0.025)
++   boot.ucl[i] <- quantile(bdeltavec,0.975)
++   }
+> mean(ifelse(norm.lcl<delta & norm.ucl>delta,1,0))
+[1] 0.9496667
+> mean(ifelse(jp.lcl<delta & jp.ucl>delta,1,0))
+[1] 0.95
+> mean(ifelse(boot.lcl<delta & boot.ucl>delta,1,0))
+[1] 0.9483333
+> 
+```
+
+* The JP interval has slightly (but only slightly) better coverage than the NA and bootstrap intervals.
+
+#### 20. Relative Risk Statistic
+
+* The relative risk statistic is appealing in that it has a *times more likely* interpretation.
+* Here is the dataset:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+mean(ya)
+na <- 82+10
+yi <- c(rep(0,174),rep(1,47))
+mean(yi)
+ni <- 174+47
+rr <- mean(yi)/mean(ya)
+rr
+```
+
+* Here is the point estimate:
+
+```Rout
+> ya <- c(rep(0,82),rep(1,10))
+> mean(ya)
+[1] 0.1086957
+> na <- 82+10
+> yi <- c(rep(0,174),rep(1,47))
+> mean(yi)
+[1] 0.2126697
+> ni <- 174+47
+> rr <- mean(yi)/mean(ya)
+> rr
+[1] 1.956561
+>
+```
+
+```Rout
