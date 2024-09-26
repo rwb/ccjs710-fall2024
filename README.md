@@ -2960,3 +2960,97 @@ X-squared = 0.00037413, df = 1, p-value = 0.9846
 ```
 
 * Based on this evidence, we *fail to reject* the independence (null) hypothesis.
+
+#### 16. Likelihood Ratio Chi Square Test
+
+* The likelihood ratio test is based on the principles of maximum likelihood estimation.
+* Let's consider our example from above:
+
+```R
+nx0 <- 213+193
+nx1 <- 312+282
+ny1x0 <- 193
+ny1x1 <- 282
+py1x0 <- ny1x0/nx0
+py1x0
+py1x1 <- ny1x1/nx1
+py1x1
+py1 <- (ny1x0+ny1x1)/(nx0+nx1)
+py1
+```
+
+* Here is the output:
+
+```Rout
+> nx0 <- 213+193
+> nx1 <- 312+282
+> ny1x0 <- 193
+> ny1x1 <- 282
+> py1x0 <- ny1x0/nx0
+> py1x0
+[1] 0.4753695
+> py1x1 <- ny1x1/nx1
+> py1x1
+[1] 0.4747475
+> py1 <- (ny1x0+ny1x1)/(nx0+nx1)
+> py1
+[1] 0.475
+>
+```
+
+* Now, we want to test the hypothesis that p(y=1) = p(y=1|x=1) = p(y=1|x=0).
+* How can we use maximum likelihood methods to test this hypothesis?
+* We will use the binomial probability mass function.
+* First, we find the MLE of p(y=1):
+
+```R
+p <- seq(from=0,to=1,by=0.001)
+pmf.pt1 <- choose(nx0+nx1,ny1x0+ny1x1)
+pmf.pt2 <- p^(ny1x0+ny1x1)
+pmf.pt3 <- (1-p)^((nx0+nx1)-(ny1x0+ny1x1))
+likelihood <- pmf.pt1*pmf.pt2*pmf.pt3
+log.likelihood <- log(pmf.pt1)+log(pmf.pt2)+log(pmf.pt3)
+df <- data.frame(p,likelihood,log.likelihood)
+ldf <- df[order(likelihood,decreasing=T),]
+head(ldf,n=10)
+
+# create a chart
+
+par(mfrow=c(1,2))
+plot(x=df$p,y=df$likelihood,type="l",lty=1,lwd=2)
+abline(h=0.025,lty=3,lwd=0.8)
+abline(v=0.475,lty=3,lwd=0.8)
+plot(x=df$p,y=df$log.likelihood,type="l",lty=1,lwd=2)
+abline(h=-3.679,lty=3,lwd=0.8)
+abline(v=0.475,lty=3,lwd=0.8)
+```
+
+* Here is the output:
+
+```Rout
+> p <- seq(from=0,to=1,by=0.001)
+> pmf.pt1 <- choose(nx0+nx1,ny1x0+ny1x1)
+> pmf.pt2 <- p^(ny1x0+ny1x1)
+> pmf.pt3 <- (1-p)^((nx0+nx1)-(ny1x0+ny1x1))
+> likelihood <- pmf.pt1*pmf.pt2*pmf.pt3
+> log.likelihood <- log(pmf.pt1)+log(pmf.pt2)+log(pmf.pt3)
+> df <- data.frame(p,likelihood,log.likelihood)
+> ldf <- df[order(likelihood,decreasing=T),]
+> head(ldf,n=10)
+        p likelihood log.likelihood
+476 0.475 0.02525659      -3.678668
+477 0.476 0.02520601      -3.680673
+475 0.474 0.02520599      -3.680674
+478 0.477 0.02505489      -3.686686
+474 0.473 0.02505478      -3.686691
+479 0.478 0.02480509      -3.696706
+473 0.472 0.02480473      -3.696721
+480 0.479 0.02445960      -3.710732
+472 0.471 0.02445876      -3.710767
+481 0.480 0.02402254      -3.728763
+>
+```
+
+<p align="center">
+<img src="/gfiles/ll1.png" width="600px">
+</p>
