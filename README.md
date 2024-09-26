@@ -2964,93 +2964,143 @@ X-squared = 0.00037413, df = 1, p-value = 0.9846
 #### 16. Likelihood Ratio Chi Square Test
 
 * The likelihood ratio test is based on the principles of maximum likelihood estimation.
+* It is convenient to use a logistic regression specification for this example.
+* I leave it as an exercise to convince yourself that you will get the same answer if you use a linear model.
 * Let's consider our example from above:
 
 ```R
-nx0 <- 213+193
-nx1 <- 312+282
-ny1x0 <- 193
-ny1x1 <- 282
-py1x0 <- ny1x0/nx0
-py1x0
-py1x1 <- ny1x1/nx1
-py1x1
-py1 <- (ny1x0+ny1x1)/(nx0+nx1)
-py1
+M0 <- glm(yss~1,family="binomial")
+summary(M0)
+logLik(M0)
+M1 <- glm(yss~1+xss,family="binomial")
+summary(M1)
+logLik(M1)
+llratio <- 2*(logLik(M1)-logLik(M0))
+attributes(llratio) <- NULL
+llratio
 ```
 
 * Here is the output:
 
 ```Rout
-> nx0 <- 213+193
-> nx1 <- 312+282
-> ny1x0 <- 193
-> ny1x1 <- 282
-> py1x0 <- ny1x0/nx0
-> py1x0
-[1] 0.4753695
-> py1x1 <- ny1x1/nx1
-> py1x1
-[1] 0.4747475
-> py1 <- (ny1x0+ny1x1)/(nx0+nx1)
-> py1
-[1] 0.475
->
+> M0 <- glm(yss~1,family="binomial")
+> summary(M0)
+
+Call:
+glm(formula = yss ~ 1, family = "binomial")
+
+Coefficients:
+            Estimate Std. Error z value Pr(>|z|)
+(Intercept) -0.10008    0.06332   -1.58    0.114
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1383.8  on 999  degrees of freedom
+Residual deviance: 1383.8  on 999  degrees of freedom
+AIC: 1385.8
+
+Number of Fisher Scoring iterations: 3
+
+> logLik(M0)
+'log Lik.' -691.8967 (df=1)
+> M1 <- glm(yss~1+xss,family="binomial")
+> summary(M1)
+
+Call:
+glm(formula = yss ~ 1 + xss, family = "binomial")
+
+Coefficients:
+             Estimate Std. Error z value Pr(>|z|)
+(Intercept) -0.098602   0.099379  -0.992    0.321
+xss         -0.002494   0.128947  -0.019    0.985
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1383.8  on 999  degrees of freedom
+Residual deviance: 1383.8  on 998  degrees of freedom
+AIC: 1387.8
+
+Number of Fisher Scoring iterations: 3
+
+> logLik(M1)
+'log Lik.' -691.8965 (df=2)
+> llratio <- 2*(logLik(M1)-logLik(M0))
+> attributes(llratio) <- NULL
+> llratio
+[1] 0.0003741224
+> 
 ```
 
-* Now, we want to test the hypothesis that p(y=1) = p(y=1|x=1) = p(y=1|x=0).
-* How can we use maximum likelihood methods to test this hypothesis?
-* We will use the binomial probability mass function.
-* First, we find the MLE of p(y=1):
+* Since the M0 model has 1 parameter estimate and the M1 model has 2 parameter estimates, the degrees of freedom for the test statistic is 2-1=1.
+* This means that the critical region for the likelihood ratio test is consistent with the critical region for the Pearson chi square test of independence.
+* Notice that the likelihood ratio chi-square test statistic is similar in magnitude to the Pearson chi square test statistic.
+
+#### 17. Checking on the Rejection Rate for the Chi Square Test when Ho is True
+
+* Because we generated the population data for this problem, we know that *x* and *y* are independent of each other.
+* In the single sample we drew, we failed to reject the hypothesis of independence (i.e., the null hypothesis).
+* We now want to see how often we reject the independence hypothesis when we draw repeated samples from the population.
+* If our test is calibrated to reject Ho at the 0.05 significance level, then we should only reject Ho in about 5% of our samples.
+* Here is the R code:
 
 ```R
-p <- seq(from=0,to=1,by=0.001)
-pmf.pt1 <- choose(nx0+nx1,ny1x0+ny1x1)
-pmf.pt2 <- p^(ny1x0+ny1x1)
-pmf.pt3 <- (1-p)^((nx0+nx1)-(ny1x0+ny1x1))
-likelihood <- pmf.pt1*pmf.pt2*pmf.pt3
-log.likelihood <- log(pmf.pt1)+log(pmf.pt2)+log(pmf.pt3)
-df <- data.frame(p,likelihood,log.likelihood)
-ldf <- df[order(likelihood,decreasing=T),]
-head(ldf,n=10)
+pcsq <- vector()
+llrcsq <- vector()
 
-# create a chart
+for(i in 1:10000){
+  s <- sample(1:length(x),size=ssize,replace=T)
+  xs <- x[s]
+  ys <- y[s]
+  st <- table(ys,xs)
+  pcsq[i] <- as.numeric(chisq.test(table(ys,xs),correct=F)[1])
+  M0s <- glm(ys~1,family="binomial")
+  ll0s <- logLik(M0s)
+  M1s <- glm(ys~1+xs,family="binomial")
+  ll1s <- logLik(M1s)  
+  llrcsq[i] <- 2*(logLik(M1s)-logLik(M0s))
+  }
 
-par(mfrow=c(1,2))
-plot(x=df$p,y=df$likelihood,type="l",lty=1,lwd=2)
-abline(h=0.025,lty=3,lwd=0.8)
-abline(v=0.475,lty=3,lwd=0.8)
-plot(x=df$p,y=df$log.likelihood,type="l",lty=1,lwd=2)
-abline(h=-3.679,lty=3,lwd=0.8)
-abline(v=0.475,lty=3,lwd=0.8)
+attributes(pcsq) <- NULL
+attributes(llrcsq) <- NULL
+mean(ifelse(pcsq>3.841,1,0))
+mean(ifelse(llrcsq>3.841,1,0))
 ```
 
-* Here is the output:
+and here are our results:
 
 ```Rout
-> p <- seq(from=0,to=1,by=0.001)
-> pmf.pt1 <- choose(nx0+nx1,ny1x0+ny1x1)
-> pmf.pt2 <- p^(ny1x0+ny1x1)
-> pmf.pt3 <- (1-p)^((nx0+nx1)-(ny1x0+ny1x1))
-> likelihood <- pmf.pt1*pmf.pt2*pmf.pt3
-> log.likelihood <- log(pmf.pt1)+log(pmf.pt2)+log(pmf.pt3)
-> df <- data.frame(p,likelihood,log.likelihood)
-> ldf <- df[order(likelihood,decreasing=T),]
-> head(ldf,n=10)
-        p likelihood log.likelihood
-476 0.475 0.02525659      -3.678668
-477 0.476 0.02520601      -3.680673
-475 0.474 0.02520599      -3.680674
-478 0.477 0.02505489      -3.686686
-474 0.473 0.02505478      -3.686691
-479 0.478 0.02480509      -3.696706
-473 0.472 0.02480473      -3.696721
-480 0.479 0.02445960      -3.710732
-472 0.471 0.02445876      -3.710767
-481 0.480 0.02402254      -3.728763
+> pcsq <- vector()
+> llrcsq <- vector()
+> 
+> for(i in 1:10000){
++   s <- sample(1:length(x),size=ssize,replace=T)
++   xs <- x[s]
++   ys <- y[s]
++   st <- table(ys,xs)
++   pcsq[i] <- as.numeric(chisq.test(table(ys,xs),correct=F)[1])
++   M0s <- glm(ys~1,family="binomial")
++   ll0s <- logLik(M0s)
++   M1s <- glm(ys~1+xs,family="binomial")
++   ll1s <- logLik(M1s)  
++   llrcsq[i] <- 2*(logLik(M1s)-logLik(M0s))
++   }
+> 
+> attributes(pcsq) <- NULL
+> attributes(llrcsq) <- NULL
+> mean(ifelse(pcsq>3.841,1,0))
+[1] 0.0508
+> mean(ifelse(llrcsq>3.841,1,0))
+[1] 0.0508
 >
 ```
 
-<p align="center">
-<img src="/gfiles/ll1.png" width="600px">
-</p>
+* Notice that both the likelihood ratio test and the Pearson chi square test have the same rejection rates when Ho is true.
+
+#### 18. Measures of Association for a Contingency Table
+
+* The chi-square test of independence tells us the probability we could get a pattern at least as extreme as the one we got in our sample if the variables (i.e., *x* and *y*) were truly independent from each other in the population from which the sample was drawn (i.e., a p-value).
+* This is helpful information for discerning the evidence in the data against the null hypothesis. However, it doesn't tell us anything about the strength of the association between *x* and *y*.
+* Last week, we mostly focused on the classical or population average treatment effect for purposes of confidence interval estimation. This week, we will consider the C/ATE again, along with the relative risk statistic, the odds ratio, and a correlational measure of asssociation called Yules' *Q*.
+* Here is the Minneapolis dataset again:
+
+```R
