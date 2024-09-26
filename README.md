@@ -2808,3 +2808,155 @@ mean(ifelse(lcl.normal<pop.delta & ucl.normal>pop.delta,1,0))
 [1] 0.8925
 > 
 ```
+
+### Lesson 5 - Thursday 9/26/24
+
+* Assignment #2 will be provided below by tomorrow at 10am; it will be due at 11:59pm on Friday 10/4/24.
+* Today, we continue our treatment of contingency tables followed by measures of association.
+* Contingency tables: Pearson chi-square test of independence and likelihood ratio test.
+* Measures of association: population average/classical treatment effect; relative risk; odds ratio; Yule's Q; logistic regression.
+
+#### 15. Pearson Chi-Square Test of Independence
+
+* Sometimes, we want to test the hypothesis that an independent variable, *x*, and an outcome variable, *y*, are independent of each other.
+* The null hypothesis asserts that the two variables are independent and is pitted against the alternative hypothesis that the two variables are not independent.
+* The Pearson chi-square test of independence is often used for such hypothesis tests.
+* Let's consider a population where *x* and *y* are actually independent in the population.
+
+```R
+set.seed(349)
+
+# population information
+
+x <- c(rep(0,100000),rep(1,150000))
+y <- c(rep(0,50000),rep(1,50000),rep(0,75000),rep(1,75000))
+table(y,x)
+```
+
+* Here is our output:
+
+```Rout
+> set.seed(349)
+> 
+> # population information
+> 
+> x <- c(rep(0,100000),rep(1,150000))
+> y <- c(rep(0,50000),rep(1,50000),rep(0,75000),rep(1,75000))
+> table(y,x)
+   x
+y       0     1
+  0 50000 75000
+  1 50000 75000
+```
+
+* Now, let's draw a single sample (N = 1,000) from this population:
+
+```R
+ssize <- 1000
+ss <- sample(1:length(x),size=ssize,replace=T)
+xss <- x[ss]
+yss <- y[ss]
+sst <- table(yss,xss)
+sst
+```
+
+* Here is our output:
+
+```Rout
+> ssize <- 1000
+> ss <- sample(1:length(x),size=ssize,replace=T)
+> xss <- x[ss]
+> yss <- y[ss]
+> sst <- table(yss,xss)
+> sst
+   xss
+yss   0   1
+  0 213 312
+  1 193 282
+>
+```
+
+* Now, let's use the Pearon chi-square test of independence to test the null hypothesis that *x* and *y* are independent of each other.
+* Before we do the test, we set our significance level to alpha = 0.05 (or a 95% confidence level).
+* We also recognize that chi-square tests of independence are two-tailed (non-directional tests).
+* The shape of the chi-square distribution is sensitive to the dimensions of the contingency table.
+* So, we calibrate the test statistic by accounting for the size of the table using *degrees of freedom*.
+* The degrees of freedom for a contingency table is given by the number of rows minus 1 times the number of columns minus 1 (i.e., (r-1)*(c-1)).
+* So, the critical value of the test statistic is:
+
+```R
+> r <- 2
+> c <- 2
+> (r-1)*(c-1)
+[1] 1
+> qchisq(p=0.95,df=1)
+[1] 3.841459
+> 
+```
+
+* So, we now know that if our test statistic exceeds 3.841, we will reject the independence (null) hypothesis.
+* Here is the R code to calculate the test statistic along with the "canned" R chisq.test() function.
+
+```R
+o11 <- sst[1,1]
+o12 <- sst[1,2]
+o21 <- sst[2,1]
+o22 <- sst[2,2]
+
+x0 <- o11+o21
+x1 <- o12+o22
+y0 <- o11+o12
+y1 <- o21+o22
+
+e11 <- x0*y0/ssize
+e12 <- x1*y0/ssize
+e21 <- x0*y1/ssize
+e22 <- x1*y1/ssize
+  
+d11 <- ((o11-e11)^2)/e11
+d12 <- ((o12-e12)^2)/e12
+d21 <- ((o21-e21)^2)/e21
+d22 <- ((o22-e22)^2)/e22
+
+tst <- d11+d12+d21+d22
+tst
+chisq.test(table(yss,xss),correct=F)
+```
+
+* Here is our output:
+
+```Rout
+> o11 <- sst[1,1]
+> o12 <- sst[1,2]
+> o21 <- sst[2,1]
+> o22 <- sst[2,2]
+> 
+> x0 <- o11+o21
+> x1 <- o12+o22
+> y0 <- o11+o12
+> y1 <- o21+o22
+> 
+> e11 <- x0*y0/ssize
+> e12 <- x1*y0/ssize
+> e21 <- x0*y1/ssize
+> e22 <- x1*y1/ssize
+>   
+> d11 <- ((o11-e11)^2)/e11
+> d12 <- ((o12-e12)^2)/e12
+> d21 <- ((o21-e21)^2)/e21
+> d22 <- ((o22-e22)^2)/e22
+> 
+> tst <- d11+d12+d21+d22
+> tst
+[1] 0.0003741253
+> chisq.test(table(yss,xss),correct=F)
+
+	Pearson's Chi-squared test
+
+data:  table(yss, xss)
+X-squared = 0.00037413, df = 1, p-value = 0.9846
+
+>
+```
+
+* Based on this evidence, we *fail to reject* the independence (null) hypothesis.
