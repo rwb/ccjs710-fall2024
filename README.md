@@ -3410,7 +3410,6 @@ mean(ifelse(boot.lcl<delta & boot.ucl>delta,1,0))
 [1] 0.9483333
 > 
 ```
-
 * The JP interval has slightly (but only slightly) better coverage than the NA and bootstrap intervals.
 
 #### 20. Relative Risk Statistic
