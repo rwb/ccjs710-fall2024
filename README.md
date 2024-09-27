@@ -3444,3 +3444,30 @@ rr
 [1] 1.956561
 >
 ```
+
+#### Assignment #2: Due End of Day on Friday 10/4/24
+
+Instructions: Please complete each of the tasks outlined below. When you are finished, please email a readable pdf copy of your work where your responses to each of the tasks and questions are clearly indicated. You are also welcome to submit a paper copy if you prefer (but any submissions arriving after 5pm on Friday 10/4 should be sent via email so there is a time record of the submission). Also, if you choose to submit a paper copy and I am not in the office when you submit, you should put your paper copy in an interoffice mail envelope and slide it under my office door. Please show all calculations in an organized and easy to read format. This is to help me grade your work but it is also so you can go back to your notes at a later date and be able to understand what you did and why you did it. A couple of points to keep in mind about late submissions: (1) if your assignment is submitted late (after 11:59pm on Friday 10/4), there will be an automatic 10 point deduction for a late submission; (2) if your assignment is submitted more than 24 hours late, there will be an automatic 20 point deduction; (3) if your assignment is submitted more than 48 hours late, the maximum available score on the assignment will be a 50. Please double check that I can read your pdf file before you submit it. If the file is corrupt or has a virus or I am unable to read it, it will be treated the same as a late submission. Once I receive your submission (which may not be immediately after you send it), I will write to you and confirm that I have received it and can open your file. I will also confirm receipt of paper submissions. If you choose to ask me a clarifying question, I will determine whether I think it is proper to answer the question. If I decide to answer the question, I will post both the question and my response below the assignment for all students to see. I will not be able to answer any clarifying questions after class on Thursday 10/3. I suggest you not submit your assignment until after that time. The point values for each task are listed next to the task. Finally, the work you submit for this project must be your own work. Good luck!
+
+1. Suppose we collect homicide rates for the last 2 years for the 25 largest cities in the U.S. In each city, we document whether the homicide rate increased (+) or decreased (-) from one year to the next. Our hypothesis is that a city drawn at random from this group of cities is equally likely to have experienced an increase or a decrease in the homicide rate. Based on our data collection effort, we find that 18 of the 25 cities experienced a drop in the homicide rate. With these data in hand, please complete each of the following tasks:
+
+* use a grid-search method to find the maximum likelihood estimate of *p* (out to 3 decimal places; 5pts).
+* create a graph of the likelihood function (5pts).
+* verify that you can get the same maximum likelihood estimate of *p* by way of an intercept-only logistic regression model (3pts).
+* calculate a logistic regression based 90% confidence interval for *p* (3pts).
+* calculate a normal approximation to the binomial based 90% confidence interval for *p* (3pts)
+* calculate a Clopper-Pearson 90% confidence interval for *p* (3pts).
+* calculate a 90% Bayesian credibility interval with a Jeffreys' prior for *p* (3pts)
+* using your student id number as a random number seed, calculate a 90% percentile bootstrap confidence interval for *p* (3pts).
+* create a table where you list the endpoints of each of the confidence intervals you've calculated and state whether the interval includes the number 0.5 (2pts).
+
+2. Using your student id number as a random number seed, develop a simulation study where you investigate the coverage rates for each of the different 90% confidence interval procedures used in problem 1 (10pts). Which procedure attains the highest coverage rates (10pts)? Which procedure most closely approximates the (advertised) 90% coverage rate (10pts). 
+
+3. Suppose a police chief in a city has 35 local precincts. She decides to open up local police precinct stations in 15 of the 35 precincts. Due to budget constraints she defers opening up stations in the other 20 precincts. After a year goes by, she asks her crime analyst to tell her what happened to robbery incidence in each of the 35 precincts. Among the 15 precincts with local police stations, the number of robberies increased in 10 of the precincts and decreased in 5 of them. Among the 20 precincts without a local police station, the number of robberies increased in 5 of the precincts and decreased in 15 of them. Based on these data (and using your student id number as a random number seed), complete each of the following tasks:
+
+* create a 2x2 contingency table summarizing these data; based on the table, conduct Pearson and likelihood-ratio chi-square tests of independence at the alpha = 0.10 significance level. State your conclusion for each test (10pts).
+* estimate the classical treatment effect (CTE) for this problem (5pts).
+* estimate a 90% normal approximation to the binomial confidence interval for the CTE (5pts).
+* estimate a 90% confidence interval for the CTE based on the Jeffreys' prior (5pts).
+* estimate a 90% confidence interval for the CTE based on the percentile bootstrap (5pts).
+* develop a simulation study where you evaluate the 90% coverage performance of each of the 3 confidence interval procedures. Provide a table where you summarize the coverage rates for each of the 3 procedures (10pts).
