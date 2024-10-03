@@ -4154,10 +4154,98 @@ hist(lorvec)
 > hist(lorvec)
 ```
 
+<p align="center">
+<img src="/gfiles/or-lor-samp-dist.png" width="500px">
+</p>
+
 * And, we can also use the bootstrap:
 
 ```R
+set.seed(831)
+ya <- c(rep(0,82),rep(1,10))
+pa <- mean(ya)
+yi <- c(rep(0,174),rep(1,47))
+pi <- mean(yi)
+or.num <- pi/(1-pi)
+or.den <- pa/(1-pa)
+or <- or.num/or.den
+or
+log(or)
+
+# confidence interval based on the bootstrap
+
+orb <- vector()
+lorb <- vector()
+
+for(i in 1:3000){
+  ba <- sample(1:92,size=92,replace=T)
+  bi <- sample(1:221,size=221,replace=T)
+  yab <- ya[ba]
+  yib <- yi[bi]
+  or.num <- mean(yib)/(1-mean(yib))
+  or.den <- mean(yab)/(1-mean(yab))
+  orb[i] <- or.num/or.den
+  lorb[i] <- log(orb[i])
+  }
+
+quantile(orb,0.025)
+quantile(orb,0.975)
+quantile(lorb,0.025)
+quantile(lorb,0.975)
+par(mfrow=c(1,2))
+hist(orb)
+hist(lorb)
+```
+
+* Here is the output:
+
+```Rout
+> set.seed(831)
+> ya <- c(rep(0,82),rep(1,10))
+> pa <- mean(ya)
+> yi <- c(rep(0,174),rep(1,47))
+> pi <- mean(yi)
+> or.num <- pi/(1-pi)
+> or.den <- pa/(1-pa)
+> or <- or.num/or.den
+> or
+[1] 2.214943
+> log(or)
+[1] 0.7952265
+> 
+> # confidence interval based on the bootstrap
+> 
+> orb <- vector()
+> lorb <- vector()
+> 
+> for(i in 1:3000){
++   ba <- sample(1:92,size=92,replace=T)
++   bi <- sample(1:221,size=221,replace=T)
++   yab <- ya[ba]
++   yib <- yi[bi]
++   or.num <- mean(yib)/(1-mean(yib))
++   or.den <- mean(yab)/(1-mean(yab))
++   orb[i] <- or.num/or.den
++   lorb[i] <- log(orb[i])
++   }
+> 
+> quantile(orb,0.025)
+    2.5% 
+1.147373 
+> quantile(orb,0.975)
+  97.5% 
+5.76506 
+> quantile(lorb,0.025)
+     2.5% 
+0.1374747 
+> quantile(lorb,0.975)
+   97.5% 
+1.751816 
+>
+```
+
+* and here is a histogram of the bootstrap distribution of the odds ratio and log(odds ratio):
 
 <p align="center">
-<img src="/gfiles/or-lor-samp-dist.png" width="500px">
+<img src="/gfiles/or-lor-boot.png" width="500px">
 </p>
