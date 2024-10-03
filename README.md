@@ -4286,7 +4286,10 @@ q
 
 * Here is a scale you could use to interpret this statistic: [0,0.3] = weak association; [0.3,0.7] = moderate association; [0.7,1.0] = strong association; and the same scale can be applied to the negative numbers. While these cutoff points are arbitrary, they can be useful for thinking about the strength of the relationship.
 * Since the range of Q is -1 to 1 we know it can't have a normal distribution.
-* Let's see what the sampling distribution looks like:
+
+#### 24. Sampling distribution of Yule's Q
+
+* If we draw repeated samples from a population with a particular Q value, what will the distribution of Q's in the samples look like?
 
 ```R
 ya <- c(rep(0,82),rep(1,10))
@@ -4626,3 +4629,119 @@ hist(qvec)
 <p align="center">
 <img src="/gfiles/qvecboot.png" width="500px">
 </p>
+
+#### 25. Introduction to Logistic Regression
+
+* The logistic regression estimator is based on the principles of maximum likelihood (ML) estimation.
+* ML estimators have a number of desirable properties discussed in both textbooks.
+* An important feature of the ML estimator is that it is a consistent estimator -- meaning what?
+* Let's consider the Minneapolis dataset:
+
+```R
+x <- c(rep(0,92),rep(1,221))
+y <- c(rep(0,82),rep(1,10),rep(0,174),rep(1,47))
+t <- table(y,x)
+t
+linear <- lm(y~1+x)
+summary(linear)
+logistic <- glm(y~1+x,family="binomial")
+summary(logistic)
+```
+
+* Here is our output:
+
+```Rout
+> x <- c(rep(0,92),rep(1,221))
+> y <- c(rep(0,82),rep(1,10),rep(0,174),rep(1,47))
+> t <- table(y,x)
+> t
+   x
+y     0   1
+  0  82 174
+  1  10  47
+> linear <- lm(y~1+x)
+> summary(linear)
+
+Call:
+lm(formula = y ~ 1 + x)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.2127 -0.2127 -0.2127 -0.1087  0.8913 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)   
+(Intercept)  0.10870    0.04006   2.713  0.00703 **
+x            0.10397    0.04768   2.181  0.02994 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3842 on 311 degrees of freedom
+Multiple R-squared:  0.01506,	Adjusted R-squared:  0.0119 
+F-statistic: 4.756 on 1 and 311 DF,  p-value: 0.02994
+
+> logistic <- glm(y~1+x,family="binomial")
+> summary(logistic)
+
+Call:
+glm(formula = y ~ 1 + x, family = "binomial")
+
+Coefficients:
+            Estimate Std. Error z value Pr(>|z|)    
+(Intercept)  -2.1041     0.3349  -6.282 3.34e-10 ***
+x             0.7952     0.3731   2.131   0.0331 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 297.08  on 312  degrees of freedom
+Residual deviance: 291.98  on 311  degrees of freedom
+AIC: 295.98
+
+Number of Fisher Scoring iterations: 4
+
+>
+```
+
+* How do we interpret these results?
+* We can start with predicted values of y from the linear model and predicted probabilities that y = 1 in the logistic regression model.
+
+```R
+# linear regression model
+
+yhat0 <- 0.10870
+yhat0
+yhat1 <- 0.10870+0.10397
+yhat1
+
+# logistic regression model
+
+phat0 <- exp(-2.1041)/(1+exp(-2.1041))
+phat0
+phat1 <- exp(-2.1041+0.7952)/(1+exp(-2.1041+0.7952))
+phat1
+```
+
+* Here is our output:
+
+```Rout
+> # linear regression model
+> 
+> yhat0 <- 0.10870
+> yhat0
+[1] 0.1087
+> yhat1 <- 0.10870+0.10397
+> yhat1
+[1] 0.21267
+> 
+> # logistic regression model
+> 
+> phat0 <- exp(-2.1041)/(1+exp(-2.1041))
+> phat0
+[1] 0.108699
+> phat1 <- exp(-2.1041+0.7952)/(1+exp(-2.1041+0.7952))
+> phat1
+[1] 0.212671
+>
+```
