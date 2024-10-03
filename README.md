@@ -4249,3 +4249,301 @@ hist(lorb)
 <p align="center">
 <img src="/gfiles/or-lor-boot.png" width="500px">
 </p>
+
+#### 23. Yule's Q
+
+* A common measure of association for ordered and binary (2x2) contingency tables is the Goodman and Kruskal's gamma statistic which, in this case of a 2x2 contingency table is called Yule's *Q* -- named after the statistician George Udny Yule (1871-1951).
+* If the odds ratio is *or*, then Q = (or-1)/(or+1) which *normalizes* the odds ratio so that it lies on a [-1,1] interval (like a correlation coefficient).
+* For our dataset, we have:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+pa <- mean(ya)
+yi <- c(rep(0,174),rep(1,47))
+pi <- mean(yi)
+or.num <- pi/(1-pi)
+or.den <- pa/(1-pa)
+or <- or.num/or.den
+q <- (or-1)/(or+1)
+q
+```
+
+* Here is our output:
+
+```Rout
+> ya <- c(rep(0,82),rep(1,10))
+> pa <- mean(ya)
+> yi <- c(rep(0,174),rep(1,47))
+> pi <- mean(yi)
+> or.num <- pi/(1-pi)
+> or.den <- pa/(1-pa)
+> or <- or.num/or.den
+> q <- (or-1)/(or+1)
+> q
+[1] 0.3779049
+>
+```
+
+* Here is a scale you could use to interpret this statistic: [0,0.3] = weak association; [0.3,0.7] = moderate association; [0.7,1.0] = strong association; and the same scale can be applied to the negative numbers. While these cutoff points are arbitrary, they can be useful for thinking about the strength of the relationship.
+* Since the range of Q is -1 to 1 we know it can't have a normal distribution.
+* Let's see what the sampling distribution looks like:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+pa <- mean(ya)
+pa
+yi <- c(rep(0,174),rep(1,47))
+pi <- mean(yi)
+pi
+
+set.seed(712)
+
+orvec <- vector()
+qvec <- vector()
+
+for(i in 1:3000){
+  yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
+  yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
+  pas <- mean(yas)
+  pis <- mean(yis)
+  or.num <- pis/(1-pis)
+  or.den <- pas/(1-pas)
+  orvec[i] <- or.num/or.den
+  qvec[i] <- (orvec[i]-1)/(orvec[i]+1)
+  }
+
+mean(orvec)
+median(orvec)
+sd(orvec)
+mean(qvec)
+median(qvec)
+sd(qvec)
+par(mfrow=c(1,2))
+hist(orvec)
+hist(qvec)
+```
+
+* Here is our output:
+
+```Rout
+> ya <- c(rep(0,82),rep(1,10))
+> pa <- mean(ya)
+> pa
+[1] 0.1086957
+> yi <- c(rep(0,174),rep(1,47))
+> pi <- mean(yi)
+> pi
+[1] 0.2126697
+> 
+> set.seed(712)
+> 
+> orvec <- vector()
+> qvec <- vector()
+> 
+> for(i in 1:3000){
++   yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
++   yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
++   pas <- mean(yas)
++   pis <- mean(yis)
++   or.num <- pis/(1-pis)
++   or.den <- pas/(1-pas)
++   orvec[i] <- or.num/or.den
++   qvec[i] <- (orvec[i]-1)/(orvec[i]+1)
++   }
+> 
+> mean(orvec)
+[1] 2.555951
+> median(orvec)
+[1] 2.265734
+> sd(orvec)
+[1] 1.320943
+> mean(qvec)
+[1] 0.3872658
+> median(qvec)
+[1] 0.3875803
+> sd(qvec)
+[1] 0.1602468
+> par(mfrow=c(1,2))
+> hist(orvec)
+> hist(qvec)
+>
+```
+
+<p align="center">
+<img src="/gfiles/qvec.png" width="500px">
+</p>
+
+* There are circumstances where it might have an approximately normal distribution.
+* When this happens, there is a simple formula for calculating the standard error and confidence interval for Yule's Q.
+* Here is an example:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+pa <- mean(ya)
+yi <- c(rep(0,174),rep(1,47))
+pi <- mean(yi)
+or.num <- pi/(1-pi)
+or.den <- pa/(1-pa)
+or <- or.num/or.den
+q <- (or-1)/(or+1)
+q
+pt1 <- (1-q*q)^2
+pt2 <- 1/10+1/82+1/174+1/47
+q.se <- sqrt(pt1*pt2/4)
+q.se
+z <- qnorm(0.975,mean=0,sd=1)
+z
+q.lcl <- q-z*q.se
+q.lcl
+q.ucl <- q+z*q.se
+q.ucl
+```
+
+* Here is our output:
+
+```R
+> ya <- c(rep(0,82),rep(1,10))
+> pa <- mean(ya)
+> yi <- c(rep(0,174),rep(1,47))
+> pi <- mean(yi)
+> or.num <- pi/(1-pi)
+> or.den <- pa/(1-pa)
+> or <- or.num/or.den
+> q <- (or-1)/(or+1)
+> q
+[1] 0.3779049
+> pt1 <- (1-q*q)^2
+> pt2 <- 1/10+1/82+1/174+1/47
+> q.se <- sqrt(pt1*pt2/4)
+> q.se
+[1] 0.1599172
+> z <- qnorm(0.975,mean=0,sd=1)
+> z
+[1] 1.959964
+> q.lcl <- q-z*q.se
+> q.lcl
+[1] 0.06447304
+> q.ucl <- q+z*q.se
+> q.ucl
+[1] 0.6913368
+> 
+```
+
+* Let's check on the coverage of this confidence interval procedure:
+
+```R
+set.seed(838)
+
+# population odds ratio
+
+pop.or <- 2.214943
+
+# population Yule's Q
+
+pop.q <- (pop.or-1)/(pop.or+1)
+pop.q
+
+# z multiplier
+
+z <- qnorm(0.975,mean=0,sd=1)
+z
+
+orvec <- vector()
+qvec <- vector()
+qse <- vector()
+q.lcl <- vector()
+q.ucl <- vector()
+
+for(i in 1:3000){
+  yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
+  yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
+  pas <- mean(yas)
+  pis <- mean(yis)
+  or.num <- pis/(1-pis)
+  or.den <- pas/(1-pas)
+  orvec[i] <- or.num/or.den
+  qvec[i] <- (orvec[i]-1)/(orvec[i]+1)
+  yas0 <- round((1-pas)*92,0)
+  yas1 <- round(pas*92,0)
+  yis0 <- round((1-pis)*221,0)
+  yis1 <- round(pis*221,0)
+  qse.pt1 <- (1-qvec[i]*qvec[i])^2
+  qse.pt2 <- 1/yas0+1/yas1+1/yis0+1/yis1
+  qse[i] <- sqrt(qse.pt1*qse.pt2/4)
+  q.lcl[i] <- qvec[i]-z*qse[i]
+  q.ucl[i] <- qvec[i]+z*qse[i]
+  }
+
+mean(qvec)
+sd(qvec)
+mean(qse)
+mean(ifelse(q.lcl<pop.q & q.ucl>pop.q,1,0))
+hist(qvec)
+```
+* Here is our output:
+
+```Rout
+> set.seed(838)
+> 
+> # population odds ratio
+> 
+> pop.or <- 2.214943
+> 
+> # population Yule's Q
+> 
+> pop.q <- (pop.or-1)/(pop.or+1)
+> pop.q
+[1] 0.377905
+> 
+> # z multiplier
+> 
+> z <- qnorm(0.975,mean=0,sd=1)
+> z
+[1] 1.959964
+> 
+> orvec <- vector()
+> qvec <- vector()
+> qse <- vector()
+> q.lcl <- vector()
+> q.ucl <- vector()
+> 
+> for(i in 1:3000){
++   yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
++   yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
++   pas <- mean(yas)
++   pis <- mean(yis)
++   or.num <- pis/(1-pis)
++   or.den <- pas/(1-pas)
++   orvec[i] <- or.num/or.den
++   qvec[i] <- (orvec[i]-1)/(orvec[i]+1)
++   yas0 <- round((1-pas)*92,0)
++   yas1 <- round(pas*92,0)
++   yis0 <- round((1-pis)*221,0)
++   yis1 <- round(pis*221,0)
++   qse.pt1 <- (1-qvec[i]*qvec[i])^2
++   qse.pt2 <- 1/yas0+1/yas1+1/yis0+1/yis1
++   qse[i] <- sqrt(qse.pt1*qse.pt2/4)
++   q.lcl[i] <- qvec[i]-z*qse[i]
++   q.ucl[i] <- qvec[i]+z*qse[i]
++   }
+> 
+> mean(qvec)
+[1] 0.3839078
+> sd(qvec)
+[1] 0.1622135
+> mean(qse)
+[1] 0.156649
+> mean(ifelse(q.lcl<pop.q & q.ucl>pop.q,1,0))
+[1] 0.9266667
+> hist(qvec)
+>
+```
+
+<p align="center">
+<img src="/gfiles/qvecsim.png" width="500px">
+</p>
+
+* When the distribution of Q gets close to the bounds, the approximation will break down.
+* In this instance, the bootstrap will work better.
+
+```R
