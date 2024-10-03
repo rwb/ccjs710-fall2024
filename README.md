@@ -3665,6 +3665,58 @@ mean(lrr.se)
 mean(ifelse(lrr.lcl<pop.lrr & lrr.ucl>pop.lrr,1,0))
 ```
 
+* Here is the output:
+
+```Rout
+> set.seed(687)
+> 
+> # population rr
+> 
+> pop.rr <- 0.213/0.109
+> pop.rr
+[1] 1.954128
+> 
+> # population lrr
+> 
+> pop.lrr <- log(0.213/0.109)
+> pop.lrr
+[1] 0.6699443
+> 
+> # z multiplier
+> 
+> z <- qnorm(0.975,mean=0,sd=1)
+> z
+[1] 1.959964
+> 
+> rrvec <- vector()
+> lrrvec <- vector()
+> lrr.se <- vector()
+> lrr.lcl <- vector()
+> lrr.ucl <- vector()
+> 
+> for(i in 1:3000){
++   yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
++   yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
++   rrvec[i] <- mean(yis)/mean(yas)
++   lrrvec[i] <- log(rrvec[i])
++   lrrsept1 <- (92-sum(yas))/(sum(yas)*(92+sum(yas)))
++   lrrsept2 <- (221-sum(yis))/(sum(yis)*(221+sum(yis)))
++   lrr.se[i] <- sqrt(lrrsept1+lrrsept2)
++   lrr.lcl[i] <- lrrvec[i]-z*lrr.se[i]
++   lrr.ucl[i] <- lrrvec[i]+z*lrr.se[i]
++   }
+> 
+> mean(lrrvec)
+[1] 0.704055
+> sd(lrrvec)
+[1] 0.3471774
+> mean(lrr.se)
+[1] 0.3190354
+> mean(ifelse(lrr.lcl<pop.lrr & lrr.ucl>pop.lrr,1,0))
+[1] 0.9416667
+>
+```
+
 * Now, let's return to our original dataset:
 
 ```R
