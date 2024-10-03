@@ -3477,6 +3477,7 @@ Instructions: Please complete each of the tasks outlined below. When you are fin
 * Reminder: Assignment #2 is due tomorrow by 11:59pm. Please submit your clearly organized results in a single pdf file.
 * Tonight's topics: measures of association for contingency tables and introduction to logistic regression.
 * At the end of last class, we examined the classical treatment effect, the sampling distribution of the classical treatment effect, and a point estimator for the relative risk statistic. We now consider the sampling distribution of the relative risk statistic.
+* The relative risk statistic is attractive because it has a "times more likely" interpretation.
 
 #### 20. Sampling variability of relative risk (sometimes also called "risk ratios").
 
@@ -3871,4 +3872,118 @@ hist(lrrb)
 
 <p align="center">
 <img src="/gfiles/lrrb-bootstrap.png" width="500px">
+</p>
+
+#### 21. Odds Ratio
+
+* The odds ratio is one of the most commonly used measures of association; it is widely encountered in contingency table and logistic regression analyses.
+* It is important to recognize that odds ratios do not generally have a "times more likely" interpretation (although there is an important exception to this statement).
+* We start our treatment of the odds ratio by reading in the Minneapolis dataset again:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+mean(ya)
+na <- 82+10
+yi <- c(rep(0,174),rep(1,47))
+mean(yi)
+ni <- 174+47
+rr <- mean(yi)/mean(ya)
+rr
+or.num <- mean(yi)/(1-mean(yi))
+or.den <- mean(ya)/(1-mean(ya))
+or <- or.num/or.den
+or
+```
+
+* Here are the results:
+
+```Rout
+> ya <- c(rep(0,82),rep(1,10))
+> mean(ya)
+[1] 0.1086957
+> na <- 82+10
+> yi <- c(rep(0,174),rep(1,47))
+> mean(yi)
+[1] 0.2126697
+> ni <- 174+47
+> rr <- mean(yi)/mean(ya)
+> rr
+[1] 1.956561
+> or.num <- mean(yi)/(1-mean(yi))
+> or.den <- mean(ya)/(1-mean(ya))
+> or <- or.num/or.den
+> or
+[1] 2.214943
+>
+```
+
+#### 21. Sampling Error of Odds Ratio
+
+* The odds ratio does not have a normal sampling distribution.
+* Let's take a look:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+pa <- mean(ya)
+pa
+yi <- c(rep(0,174),rep(1,47))
+pi <- mean(yi)
+pi
+
+set.seed(687)
+orvec <- vector()
+
+for(i in 1:3000){
+  yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
+  yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
+  pas <- mean(yas)
+  pis <- mean(yis)
+  or.num <- pis/(1-pis)
+  or.den <- pas/(1-pas)
+  orvec[i] <- or.num/or.den
+  }
+
+mean(orvec)
+median(orvec)
+sd(orvec)
+hist(orvec)
+```
+
+* Here are the results:
+
+```R
+> ya <- c(rep(0,82),rep(1,10))
+> pa <- mean(ya)
+> pa
+[1] 0.1086957
+> yi <- c(rep(0,174),rep(1,47))
+> pi <- mean(yi)
+> pi
+[1] 0.2126697
+> 
+> set.seed(687)
+> orvec <- vector()
+> 
+> for(i in 1:3000){
++   yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
++   yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
++   pas <- mean(yas)
++   pis <- mean(yis)
++   or.num <- pis/(1-pis)
++   or.den <- pas/(1-pas)
++   orvec[i] <- or.num/or.den
++   }
+> 
+> mean(orvec)
+[1] 2.483776
+> median(orvec)
+[1] 2.25
+> sd(orvec)
+[1] 1.152358
+> hist(orvec)
+>
+```
+
+<p align="center">
+<img src="/gfiles/or-samp-dist.png" width="500px">
 </p>
