@@ -3471,3 +3471,352 @@ Instructions: Please complete each of the tasks outlined below. When you are fin
 * estimate a 90% confidence interval for the CTE based on the Jeffreys' prior (5pts).
 * estimate a 90% confidence interval for the CTE based on the percentile bootstrap (5pts).
 * develop a simulation study where you evaluate the 90% coverage performance of each of the 3 confidence interval procedures. Provide a table where you summarize the coverage rates for each of the 3 procedures (10pts).
+
+### Lesson 6 - Thursday 10/3/24
+
+* Reminder: Assignment #2 is due tomorrow by 11:59pm. Please submit your clearly organized results in a single pdf file.
+* Tonight's topics: measures of association for contingency tables and introduction to logistic regression.
+* At the end of last class, we examined the classical treatment effect, the sampling distribution of the classical treatment effect, and a point estimator for the relative risk statistic. We now consider the sampling distribution of the relative risk statistic.
+
+#### 20. Sampling variability of relative risk (sometimes also called "risk ratios").
+
+* We begin by reading the Minneapolis data and calculating the point estimate (this is review from last week):
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+mean(ya)
+na <- 82+10
+yi <- c(rep(0,174),rep(1,47))
+mean(yi)
+ni <- 174+47
+rr <- mean(yi)/mean(ya)
+rr
+```
+
+* Here are the results:
+
+```Rout
+> ya <- c(rep(0,82),rep(1,10))
+> mean(ya)
+[1] 0.1086957
+> na <- 82+10
+> yi <- c(rep(0,174),rep(1,47))
+> mean(yi)
+[1] 0.2126697
+> ni <- 174+47
+> rr <- mean(yi)/mean(ya)
+> rr
+[1] 1.956561
+>
+```
+
+* Now, let's consider the sampling distribution or sampling variability of the relative risk statistic.
+* To think about this sampling distribution, let's simulate repeated sampling from a population that has the same conditional probabilities of recidivism for the different treatments that were observed in the Minneapolis study.
+
+```R
+set.seed(687)
+rrvec <- vector()
+
+for(i in 1:3000){
+  yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
+  yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
+  rrvec[i] <- mean(yis)/mean(yas)
+  }
+
+mean(rrvec)
+median(rrvec)
+sd(rrvec)
+hist(rrvec)
+```
+
+* Here are the results:
+
+```Rout
+> set.seed(687)
+> rrvec <- vector()
+> 
+> for(i in 1:3000){
++   yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
++   yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
++   rrvec[i] <- mean(yis)/mean(yas)
++   }
+> 
+> mean(rrvec)
+[1] 2.157768
+> median(rrvec)
+[1] 1.977376
+> sd(rrvec)
+[1] 0.8861112
+> hist(rrvec)
+>
+```
+
+* And, the simulated sampling distribution of the relative risk statistic looks like this:
+
+<p align="center">
+<img src="/gfiles/rr-sampdist.png" width="500px">
+</p>
+
+* Which definitely does not look like a "normal" sampling distribution.
+* This means there is no symmetric closed-form formula for calculating confidence intervals ([link](https://en.wikipedia.org/wiki/Relative_risk#Inference)).
+* One idea is to work with the natural log of the relative risk statistic and assume that the sampling distribution is *approximately normal.*
+* Let's see what this looks like:
+
+```R
+set.seed(687)
+rrvec <- vector()
+lrrvec <- vector()
+
+for(i in 1:3000){
+  yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
+  yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
+  rrvec[i] <- mean(yis)/mean(yas)
+  lrrvec[i] <- log(rrvec[i])
+  }
+
+mean(rrvec)
+median(rrvec)
+sd(rrvec)
+mean(lrrvec)
+median(lrrvec)
+sd(lrrvec)
+par(mfrow=c(1,2))
+hist(rrvec)
+hist(lrrvec)
+```
+
+* We get the following results:
+
+```Rout
+> set.seed(687)
+> rrvec <- vector()
+> lrrvec <- vector()
+> 
+> for(i in 1:3000){
++   yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
++   yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
++   rrvec[i] <- mean(yis)/mean(yas)
++   lrrvec[i] <- log(rrvec[i])
++   }
+> 
+> mean(rrvec)
+[1] 2.157768
+> median(rrvec)
+[1] 1.977376
+> sd(rrvec)
+[1] 0.8861112
+> mean(lrrvec)
+[1] 0.704055
+> median(lrrvec)
+[1] 0.6817705
+> sd(lrrvec)
+[1] 0.3471774
+> par(mfrow=c(1,2))
+> hist(rrvec)
+> hist(lrrvec)
+>
+```
+
+<p align="center">
+<img src="/gfiles/rr-lrr-sampdist.png" width="500px">
+</p>
+
+* So, the sampling distribution of the log relative risk statistic looks a little more symmetric in this case (but still not completely normal). Let's see how the standard *symmetric confidence interval* procedure performs when we assume the LRR is approximately normally distributed:
+
+```R
+set.seed(687)
+
+# population rr
+
+pop.rr <- 0.213/0.109
+pop.rr
+
+# population lrr
+
+pop.lrr <- log(0.213/0.109)
+pop.lrr
+
+# z multiplier
+
+z <- qnorm(0.975,mean=0,sd=1)
+z
+
+rrvec <- vector()
+lrrvec <- vector()
+lrr.se <- vector()
+lrr.lcl <- vector()
+lrr.ucl <- vector()
+
+for(i in 1:3000){
+  yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
+  yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
+  rrvec[i] <- mean(yis)/mean(yas)
+  lrrvec[i] <- log(rrvec[i])
+  lrrsept1 <- (92-sum(yas))/(sum(yas)*(92+sum(yas)))
+  lrrsept2 <- (221-sum(yis))/(sum(yis)*(221+sum(yis)))
+  lrr.se[i] <- sqrt(lrrsept1+lrrsept2)
+  lrr.lcl[i] <- lrrvec[i]-z*lrr.se[i]
+  lrr.ucl[i] <- lrrvec[i]+z*lrr.se[i]
+  }
+
+mean(lrrvec)
+sd(lrrvec)
+mean(lrr.se)
+mean(ifelse(lrr.lcl<pop.lrr & lrr.ucl>pop.lrr,1,0))
+```
+
+* Now, let's return to our original dataset:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+mean(ya)
+na <- 82+10
+yi <- c(rep(0,174),rep(1,47))
+mean(yi)
+ni <- 174+47
+rr <- mean(yi)/mean(ya)
+rr
+lrr <- log(rr)
+lrr
+
+# confidence interval for log(relative risk)
+# based on normal approximation
+
+z <- qnorm(0.975,mean=0,sd=1)
+lrrsept1 <- (92-sum(ya))/(sum(ya)*(92+sum(ya)))
+lrrsept2 <- (221-sum(yi))/(sum(yi)*(221+sum(yi)))
+lrr.se <- sqrt(lrrsept1+lrrsept2)
+lrr.lcl <- lrr-z*lrr.se
+lrr.lcl
+exp(lrr.lcl)
+lrr.ucl <- lrr+z*lrr.se
+lrr.ucl
+exp(lrr.ucl)
+```
+
+* Here is the output:
+
+```Rout
+> ya <- c(rep(0,82),rep(1,10))
+> mean(ya)
+[1] 0.1086957
+> na <- 82+10
+> yi <- c(rep(0,174),rep(1,47))
+> mean(yi)
+[1] 0.2126697
+> ni <- 174+47
+> rr <- mean(yi)/mean(ya)
+> rr
+[1] 1.956561
+> lrr <- log(rr)
+> lrr
+[1] 0.6711884
+> 
+> # confidence interval for log(relative risk)
+> # based on normal approximation
+> 
+> z <- qnorm(0.975,mean=0,sd=1)
+> lrrsept1 <- (92-sum(ya))/(sum(ya)*(92+sum(ya)))
+> lrrsept2 <- (221-sum(yi))/(sum(yi)*(221+sum(yi)))
+> lrr.se <- sqrt(lrrsept1+lrrsept2)
+> lrr.lcl <- lrr-z*lrr.se
+> lrr.lcl
+[1] 0.06961651
+> exp(lrr.lcl)
+[1] 1.072097
+> lrr.ucl <- lrr+z*lrr.se
+> lrr.ucl
+[1] 1.27276
+> exp(lrr.ucl)
+[1] 3.570695
+> 
+```
+
+* Note: we could also calculate a confidence interval based on the bootstrap:
+
+```R
+set.seed(943)
+ya <- c(rep(0,82),rep(1,10))
+mean(ya)
+na <- 82+10
+yi <- c(rep(0,174),rep(1,47))
+mean(yi)
+ni <- 174+47
+rr <- mean(yi)/mean(ya)
+rr
+lrr <- log(rr)
+lrr
+
+# confidence interval based on the bootstrap
+
+rrb <- vector()
+lrrb <- vector()
+
+for(i in 1:3000){
+  ba <- sample(1:92,size=92,replace=T)
+  bi <- sample(1:221,size=221,replace=T)
+  yab <- ya[ba]
+  yib <- yi[bi]
+  rrb[i] <- mean(yib)/mean(yab)
+  lrrb[i] <- log(rrb[i])
+  }
+
+quantile(rrb,0.025)
+quantile(rrb,0.975)
+quantile(lrrb,0.025)
+quantile(lrrb,0.975)
+```
+
+* Here is our output:
+
+```R
+> set.seed(943)
+> ya <- c(rep(0,82),rep(1,10))
+> mean(ya)
+[1] 0.1086957
+> na <- 82+10
+> yi <- c(rep(0,174),rep(1,47))
+> mean(yi)
+[1] 0.2126697
+> ni <- 174+47
+> rr <- mean(yi)/mean(ya)
+> rr
+[1] 1.956561
+> lrr <- log(rr)
+> lrr
+[1] 0.6711884
+> 
+> # confidence interval based on the bootstrap
+> 
+> rrb <- vector()
+> lrrb <- vector()
+> 
+> for(i in 1:3000){
++   ba <- sample(1:92,size=92,replace=T)
++   bi <- sample(1:221,size=221,replace=T)
++   yab <- ya[ba]
++   yib <- yi[bi]
++   rrb[i] <- mean(yib)/mean(yab)
++   lrrb[i] <- log(rrb[i])
++   }
+> 
+> quantile(rrb,0.025)
+   2.5% 
+1.13315 
+> quantile(rrb,0.975)
+   97.5% 
+4.475113 
+> quantile(lrrb,0.025)
+     2.5% 
+0.1250014 
+> quantile(lrrb,0.975)
+   97.5% 
+1.498532
+hist(lrrb)
+```
+
+* Notice that the bootstrap sampling distribution of the log(relative risk) exhibits a noticeable degree of asymmetry suggesting the normal approximation may not be reasonable for this situation. The bootstrap would probably be a better choice.
+
+<p align="center">
+<img src="/gfiles/lrrb-bootstrap.png" width="500px">
+</p>
