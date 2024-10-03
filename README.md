@@ -3917,7 +3917,7 @@ or
 >
 ```
 
-#### 21. Sampling Error of Odds Ratio
+#### 22. Sampling distribution of the odds ratio
 
 * The odds ratio does not have a normal sampling distribution.
 * Let's take a look:
@@ -3986,4 +3986,174 @@ hist(orvec)
 
 <p align="center">
 <img src="/gfiles/or-samp-dist.png" width="500px">
+</p>
+
+* Like the relative risk, one can invoke the assumption that the log of the odds ratio does have a normal sampling distribution whose standard error is given by:
+
+```R
+ya <- c(rep(0,82),rep(1,10))
+mean(ya)
+yi <- c(rep(0,174),rep(1,47))
+mean(yi)
+or.num <- mean(yi)/(1-mean(yi))
+or.den <- mean(ya)/(1-mean(ya))
+or <- or.num/or.den
+or
+lor <- log(or)
+lor
+z <- qnorm(0.975,mean=0,sd=1)
+z
+std.err.lor <- sqrt(1/82+1/10+1/174+1/47)
+std.err.lor
+lcl.lor <- lor-1.96*std.err.lor
+lcl.lor
+ucl.lor <- lor+1.96*std.err.lor
+ucl.lor
+```
+
+* Here is the output:
+  
+```Rout
+> ya <- c(rep(0,82),rep(1,10))
+> mean(ya)
+[1] 0.1086957
+> yi <- c(rep(0,174),rep(1,47))
+> mean(yi)
+[1] 0.2126697
+> or.num <- mean(yi)/(1-mean(yi))
+> or.den <- mean(ya)/(1-mean(ya))
+> or <- or.num/or.den
+> or
+[1] 2.214943
+> lor <- log(or)
+> lor
+[1] 0.7952265
+> z <- qnorm(0.975,mean=0,sd=1)
+> z
+[1] 1.959964
+> std.err.lor <- sqrt(1/82+1/10+1/174+1/47)
+> std.err.lor
+[1] 0.3731204
+> lcl.lor <- lor-1.96*std.err.lor
+> lcl.lor
+[1] 0.06391044
+> ucl.lor <- lor+1.96*std.err.lor
+> ucl.lor
+[1] 1.526542
+>
+```
+
+* Let's check on the coverage rate for this confidence interval procedure:
+
+```R
+set.seed(121)
+
+# population odds ratio
+
+pop.or <- 2.214943
+
+# population log(odds ratio(
+
+pop.lor <- log(2.214943)
+pop.lor
+
+# z multiplier
+
+z <- qnorm(0.975,mean=0,sd=1)
+z
+
+orvec <- vector()
+lorvec <- vector()
+lor.se <- vector()
+lor.lcl <- vector()
+lor.ucl <- vector()
+
+for(i in 1:3000){
+  yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
+  yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
+  pas <- mean(yas)
+  pis <- mean(yis)
+  or.num <- pis/(1-pis)
+  or.den <- pas/(1-pas)
+  orvec[i] <- or.num/or.den
+  lorvec[i] <- log(orvec[i])
+  yas0 <- round((1-pas)*92,0)
+  yas1 <- round(pas*92,0)
+  yis0 <- round((1-pis)*221,0)
+  yis1 <- round(pis*221,0)
+  lor.se[i] <- sqrt(1/yas0+1/yas1+1/yis0+1/yis1)
+  lor.lcl[i] <- lorvec[i]-z*lor.se[i]
+  lor.ucl[i] <- lorvec[i]+z*lor.se[i]
+  }
+
+mean(lorvec)
+sd(lorvec)
+mean(lor.se)
+mean(ifelse(lor.lcl<pop.lor & lor.ucl>pop.lor,1,0))
+par(mfrow=c(1,2))
+hist(orvec)
+hist(lorvec)
+```
+
+* Here is the output:
+
+```Rout
+> set.seed(121)
+> 
+> # population odds ratio
+> 
+> pop.or <- 2.214943
+> 
+> # population log(odds ratio(
+> 
+> pop.lor <- log(2.214943)
+> pop.lor
+[1] 0.7952267
+> 
+> # z multiplier
+> 
+> z <- qnorm(0.975,mean=0,sd=1)
+> z
+[1] 1.959964
+> 
+> orvec <- vector()
+> lorvec <- vector()
+> lor.se <- vector()
+> lor.lcl <- vector()
+> lor.ucl <- vector()
+> 
+> for(i in 1:3000){
++   yas <- ifelse(runif(n=92,min=0,max=1)<0.109,1,0)
++   yis <- ifelse(runif(n=221,min=0,max=1)<0.213,1,0)
++   pas <- mean(yas)
++   pis <- mean(yis)
++   or.num <- pis/(1-pis)
++   or.den <- pas/(1-pas)
++   orvec[i] <- or.num/or.den
++   lorvec[i] <- log(orvec[i])
++   yas0 <- round((1-pas)*92,0)
++   yas1 <- round(pas*92,0)
++   yis0 <- round((1-pis)*221,0)
++   yis1 <- round(pis*221,0)
++   lor.se[i] <- sqrt(1/yas0+1/yas1+1/yis0+1/yis1)
++   lor.lcl[i] <- lorvec[i]-z*lor.se[i]
++   lor.ucl[i] <- lorvec[i]+z*lor.se[i]
++   }
+> 
+> mean(lorvec)
+[1] 0.830568
+> sd(lorvec)
+[1] 0.4053656
+> mean(lor.se)
+[1] 0.3845514
+> mean(ifelse(lor.lcl<pop.lor & lor.ucl>pop.lor,1,0))
+[1] 0.9526667
+>
+> par(mfrow=c(1,2))
+> hist(orvec)
+> hist(lorvec)
+```
+
+<p align="center">
+<img src="/gfiles/or-lor-samp-dist.png" width="500px">
 </p>
