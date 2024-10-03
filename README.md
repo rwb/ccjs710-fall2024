@@ -4154,6 +4154,10 @@ hist(lorvec)
 > hist(lorvec)
 ```
 
+* And, we can also use the bootstrap:
+
+```R
+
 <p align="center">
 <img src="/gfiles/or-lor-samp-dist.png" width="500px">
 </p>
