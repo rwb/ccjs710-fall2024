@@ -4547,3 +4547,82 @@ hist(qvec)
 * In this instance, the bootstrap will work better.
 
 ```R
+set.seed(553)
+ya <- c(rep(0,82),rep(1,10))
+pa <- mean(ya)
+yi <- c(rep(0,174),rep(1,47))
+pi <- mean(yi)
+or.num <- pi/(1-pi)
+or.den <- pa/(1-pa)
+or <- or.num/or.den
+or
+q <- (or-1)/(or+1)
+q
+
+# confidence interval based on the bootstrap
+
+orb <- vector()
+qvec <- vector()
+
+for(i in 1:3000){
+  ba <- sample(1:92,size=92,replace=T)
+  bi <- sample(1:221,size=221,replace=T)
+  yab <- ya[ba]
+  yib <- yi[bi]
+  or.num <- mean(yib)/(1-mean(yib))
+  or.den <- mean(yab)/(1-mean(yab))
+  orb[i] <- or.num/or.den
+  qvec[i] <- (orb[i]-1)/(orb[i]+1)
+  }
+
+quantile(qvec,0.025)
+quantile(qvec,0.975)
+hist(qvec)
+```
+
+* Here is the output:
+
+```Rout
+> set.seed(553)
+> ya <- c(rep(0,82),rep(1,10))
+> pa <- mean(ya)
+> yi <- c(rep(0,174),rep(1,47))
+> pi <- mean(yi)
+> or.num <- pi/(1-pi)
+> or.den <- pa/(1-pa)
+> or <- or.num/or.den
+> or
+[1] 2.214943
+> q <- (or-1)/(or+1)
+> q
+[1] 0.3779049
+> 
+> # confidence interval based on the bootstrap
+> 
+> orb <- vector()
+> qvec <- vector()
+> 
+> for(i in 1:3000){
++   ba <- sample(1:92,size=92,replace=T)
++   bi <- sample(1:221,size=221,replace=T)
++   yab <- ya[ba]
++   yib <- yi[bi]
++   or.num <- mean(yib)/(1-mean(yib))
++   or.den <- mean(yab)/(1-mean(yab))
++   orb[i] <- or.num/or.den
++   qvec[i] <- (orb[i]-1)/(orb[i]+1)
++   }
+> 
+> quantile(qvec,0.025)
+      2.5% 
+0.05809015 
+> quantile(qvec,0.975)
+    97.5% 
+0.6981132 
+> hist(qvec)
+>
+```
+
+<p align="center">
+<img src="/gfiles/qvecboot.png" width="500px">
+</p>
